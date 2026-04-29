@@ -83,12 +83,12 @@ export default function FinalizeAfterRedirect({ token }: { token: string }) {
 
   if (error) {
     return (
-      <div className="border border-slate-300/80 bg-white px-6 py-7">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-red-600">
+      <div className="border border-slate-200 bg-white px-7 py-8">
+        <div className="text-[10.5px] font-semibold uppercase tracking-[0.22em] text-red-600">
           Couldn&apos;t finalize
         </div>
-        <p className="mt-3 font-serif text-[15px] leading-relaxed text-slate-700">{error}</p>
-        <a href={`/sign/${token}`} className="doc-btn-secondary mt-6">
+        <p className="mt-4 text-[14.5px] leading-[1.7] text-slate-700">{error}</p>
+        <a href={`/sign/${token}`} className="doc-btn-secondary mt-7">
           Back to contract
         </a>
       </div>
@@ -96,12 +96,12 @@ export default function FinalizeAfterRedirect({ token }: { token: string }) {
   }
 
   return (
-    <div className="border border-slate-300/80 bg-white px-6 py-12 text-center">
-      <div className="mx-auto mb-5 h-8 w-8 animate-spin rounded-full border-[1.5px] border-slate-300 border-t-navy" />
-      <div className="font-serif text-[18px] font-semibold text-navy">
+    <div className="border border-slate-200 bg-white px-7 py-14 text-center">
+      <div className="mx-auto mb-6 h-7 w-7 animate-spin rounded-full border-[1.5px] border-slate-300 border-t-navy" />
+      <div className="text-[16px] font-semibold tracking-[-0.01em] text-navy">
         Finalizing your enrollment…
       </div>
-      <p className="mt-2 font-serif text-[14px] leading-relaxed text-slate-500">
+      <p className="mt-2 text-[13.5px] leading-[1.6] text-slate-500">
         Confirming your payment and saving your signed agreement.
       </p>
     </div>

@@ -54,6 +54,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const [showCancellationRefundTerms, setShowCancellationRefundTerms] =
     useState<"Yes" | "No">("Yes");
 
+  // Section 11 — Marketing & Media Release (default off)
+  const [marketingReleaseConsent, setMarketingReleaseConsent] =
+    useState<"Yes" | "No">("No");
+
   const weeksMatch = programDuration.match(/([\d.]+)/);
   const weeks = weeksMatch ? Number(weeksMatch[1]) : 0;
 
@@ -139,6 +143,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         guaranteeType === "Full Refund Guarantee" ? Number(guaranteedTargetScore) : null,
       trial_window: trialWindow === "Yes",
       show_cancellation_refund_terms: showCancellationRefundTerms === "Yes",
+      marketing_release_consent: marketingReleaseConsent === "Yes",
     };
 
     const res = await fetch("/api/contracts", {
@@ -416,6 +421,24 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
           >
             <option>Yes</option>
             <option>No</option>
+          </select>
+        </Field>
+      </FormSection>
+
+      <FormSection
+        title="6. Marketing & Media Release"
+        subtitle="Adds an optional Section 11 to the agreement granting StudyCore the right to use the student's name, likeness, results, testimonials, and session recordings for marketing purposes. Confirm with the parent before opting in."
+      >
+        <Field label="Marketing Release Consent">
+          <select
+            className="input"
+            value={marketingReleaseConsent}
+            onChange={(e) =>
+              setMarketingReleaseConsent(e.target.value as "Yes" | "No")
+            }
+          >
+            <option>No</option>
+            <option>Yes</option>
           </select>
         </Field>
       </FormSection>

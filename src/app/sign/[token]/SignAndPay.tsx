@@ -14,6 +14,10 @@ interface Props {
   stripePublishableKey: string;
   stripeClientSecret: string | null;
   initialError?: string | null;
+  // Section number for the signature block — depends on how many clauses
+  // the agreement contains (varies with optional clauses like the marketing
+  // & media release).
+  signatureClauseNumber: number;
 }
 
 export const SIGNATURE_STORAGE_KEY = (token: string) => `studycore.sig.${token}`;
@@ -38,7 +42,7 @@ export default function SignAndPay(props: Props) {
               colorTextSecondary: "#64748b",
               colorBackground: "#ffffff",
               borderRadius: "0px",
-              fontFamily: "Inter, system-ui, sans-serif",
+              fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif',
               fontSizeBase: "14px",
               spacingUnit: "4px",
             },
@@ -46,16 +50,16 @@ export default function SignAndPay(props: Props) {
               ".Input": {
                 border: "1px solid #cbd5e1",
                 boxShadow: "none",
-                padding: "10px 12px",
+                padding: "11px 12px",
               },
               ".Input:focus": {
                 border: "1px solid #1A3C6B",
                 boxShadow: "0 0 0 2px rgba(26,60,107,0.15)",
               },
               ".Label": {
-                fontSize: "11px",
+                fontSize: "10.5px",
                 fontWeight: "600",
-                letterSpacing: "0.16em",
+                letterSpacing: "0.2em",
                 textTransform: "uppercase",
                 color: "#64748b",
               },
@@ -91,9 +95,6 @@ function InnerForm(props: Props) {
 
   useEffect(() => {
     setMounted(true);
-    // If we returned here from a Stripe redirect with a non-success status, the
-    // server passed us an error message. Strip the Stripe query params from the
-    // URL so the address bar is clean and a refresh doesn't re-show the banner.
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       const stripeParams = [
@@ -115,7 +116,6 @@ function InnerForm(props: Props) {
     }
   }, []);
 
-  // Resize signature canvas to its parent (avoid blurry strokes on mobile)
   const wrapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!mounted) return;
@@ -158,9 +158,6 @@ function InnerForm(props: Props) {
 
     setSubmitting(true);
 
-    // Capture the signature data URL once now — for redirect-based payment
-    // methods (Klarna, Affirm, etc.) the page will fully reload before we get
-    // back here, so we stash it in sessionStorage to survive the round-trip.
     const signatureDataUrl = sigRef.current
       .getTrimmedCanvas()
       .toDataURL("image/png");
@@ -173,14 +170,9 @@ function InnerForm(props: Props) {
         const { error: submitError } = await elements.submit();
         if (submitError) throw submitError;
 
-        // Save signature before triggering payment confirmation. Redirect
-        // methods will navigate the browser away and come back to return_url.
         try {
           sessionStorage.setItem(SIGNATURE_STORAGE_KEY(props.token), signatureDataUrl);
-        } catch {
-          // sessionStorage can be unavailable in privacy modes; we'll just
-          // fall back to the inline-confirm path below for non-redirect methods.
-        }
+        } catch {}
 
         const returnUrl = `${window.location.origin}/sign/${props.token}`;
         const { error: payError, paymentIntent } = await stripe.confirmPayment({
@@ -188,15 +180,12 @@ function InnerForm(props: Props) {
           redirect: "if_required",
           confirmParams: { return_url: returnUrl },
         });
-        // If we get here, no redirect happened (typically a card payment).
         if (payError) throw payError;
         if (!paymentIntent || paymentIntent.status !== "succeeded") {
           throw new Error("Payment was not completed. Please try again.");
         }
       }
 
-      // Submit signature to server, which verifies the PaymentIntent again,
-      // renders & stores the PDF, and sends confirmation emails.
       const res = await fetch("/api/sign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -223,16 +212,18 @@ function InnerForm(props: Props) {
   }
 
   const showPay = props.amountDueCents > 0;
+  const sigNum = String(props.signatureClauseNumber).padStart(2, "0");
+  const payNum = String(props.signatureClauseNumber + 1).padStart(2, "0");
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Signature panel */}
-      <section className="doc-pane">
-        <div className="flex items-center justify-between border-b border-slate-200 px-7 py-5">
-          <div className="flex items-baseline gap-3">
-            <span className="doc-section-num">§ 17</span>
-            <h3 className="doc-h2">Client Signature</h3>
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-12">
+      {/* Signature — minimal: thin border, clean label, no card chrome */}
+      <section>
+        <div className="mb-5 flex items-baseline justify-between">
+          <h3 className="flex items-baseline">
+            <span className="doc-section-num">§ {sigNum}</span>
+            <span className="doc-h2">Client Signature</span>
+          </h3>
           <button
             type="button"
             onClick={clearSignature}
@@ -241,69 +232,60 @@ function InnerForm(props: Props) {
             Clear
           </button>
         </div>
-        <div className="px-7 pb-7 pt-6">
-          <p className="mb-5 font-serif text-[13.5px] leading-[1.6] text-slate-500">
-            Sign as{" "}
-            <span className="font-semibold text-slate-700">{props.parentName}</span>{" "}
-            below. Draw within the box using your finger, stylus, or mouse.
-          </p>
-          <div
-            ref={wrapRef}
-            className="border border-slate-300 bg-[#fcfbf7]"
-          >
-            {mounted ? (
-              <SignatureCanvas
-                ref={(el) => {
-                  sigRef.current = el;
-                }}
-                penColor="#0f172a"
-                onEnd={() => setHasSigned(true)}
-                canvasProps={{ className: "w-full h-[180px]" }}
-              />
-            ) : (
-              <div className="h-[180px] w-full" />
-            )}
-          </div>
-          <div className="mt-4 flex items-baseline justify-between border-t border-slate-200 pt-3">
-            <span className="font-serif text-[13px] italic text-slate-500">
-              x &nbsp; {props.parentName}
-            </span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400">
-              Parent / Guardian
-            </span>
-          </div>
+        <p className="mb-4 text-[13.5px] leading-[1.6] text-slate-500">
+          Sign as <span className="font-semibold text-slate-800">{props.parentName}</span>{" "}
+          using your finger, stylus, or mouse.
+        </p>
+        <div ref={wrapRef} className="border border-slate-300 bg-white">
+          {mounted ? (
+            <SignatureCanvas
+              ref={(el) => {
+                sigRef.current = el;
+              }}
+              penColor="#0f172a"
+              onEnd={() => setHasSigned(true)}
+              canvasProps={{ className: "w-full h-[180px]" }}
+            />
+          ) : (
+            <div className="h-[180px] w-full" />
+          )}
+        </div>
+        <div className="mt-4 flex items-baseline justify-between">
+          <span className="text-[13px] italic text-slate-500">
+            x &nbsp; {props.parentName}
+          </span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+            Parent / Guardian
+          </span>
         </div>
       </section>
 
       {showPay && (
-        <section className="doc-pane">
-          <div className="flex items-center justify-between border-b border-slate-200 px-7 py-5">
-            <div className="flex items-baseline gap-3">
-              <span className="doc-section-num">§ 18</span>
-              <h3 className="doc-h2">Payment Due at Signing</h3>
-            </div>
-            <span className="font-serif text-[18px] font-semibold tracking-[-0.01em] text-navy">
+        <section>
+          <div className="mb-5 flex items-baseline justify-between">
+            <h3 className="flex items-baseline">
+              <span className="doc-section-num">§ {payNum}</span>
+              <span className="doc-h2">Payment Due at Signing</span>
+            </h3>
+            <span className="text-[18px] font-semibold tracking-[-0.01em] text-navy">
               ${(props.amountDueCents / 100).toFixed(2)}
             </span>
           </div>
-          <div className="px-7 py-7">
-            {props.stripeClientSecret ? (
-              <PaymentElement />
-            ) : (
-              <div className="border-l-2 border-amber-500 bg-amber-50 px-4 py-3 font-serif text-[13px] text-amber-800">
-                Payment is currently unavailable. Please refresh and try again.
-              </div>
-            )}
-            <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
-              Processed securely by Stripe &middot; Card is charged on submit
-            </p>
-          </div>
+          {props.stripeClientSecret ? (
+            <PaymentElement />
+          ) : (
+            <div className="border-l-2 border-amber-500 bg-amber-50 px-4 py-3 text-[13px] text-amber-800">
+              Payment is currently unavailable. Please refresh and try again.
+            </div>
+          )}
+          <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+            Processed securely by Stripe &middot; Card is charged on submit
+          </p>
         </section>
       )}
 
-      {/* Consent + submit */}
-      <section className="doc-pane px-7 py-6">
-        <label className="flex items-start gap-3 font-serif text-[14px] leading-[1.65] text-slate-700">
+      <section className="border-t border-slate-200 pt-8">
+        <label className="flex items-start gap-3 text-[14px] leading-[1.65] text-slate-700">
           <input
             type="checkbox"
             checked={agree}
@@ -318,7 +300,7 @@ function InnerForm(props: Props) {
         </label>
 
         {error && (
-          <div className="mt-5 border-l-2 border-red-500 bg-red-50 px-4 py-3 font-serif text-[13px] leading-[1.6] text-red-800">
+          <div className="mt-5 border-l-2 border-red-500 bg-red-50 px-4 py-3 text-[13px] leading-[1.6] text-red-800">
             {error}
           </div>
         )}
@@ -327,11 +309,11 @@ function InnerForm(props: Props) {
           {submitting
             ? "Processing…"
             : showPay
-            ? "Sign & Submit Payment"
+            ? "Sign & Pay"
             : "Sign Agreement"}
         </button>
-        <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400">
-          Secured by Stripe &nbsp;·&nbsp; 256-bit SSL
+        <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+          Secured by Stripe &middot; 256-bit SSL
         </p>
       </section>
     </form>

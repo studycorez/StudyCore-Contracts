@@ -13,8 +13,7 @@ const config: Config = {
         cream: "#FFF8F1",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        serif: ['"Source Serif 4"', "Charter", "Cambria", "Georgia", "serif"],
+        sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
       },
     },
   },

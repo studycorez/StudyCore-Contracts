@@ -2,7 +2,10 @@ import type { Contract } from "@/lib/types";
 import { formatDate, formatMoney } from "@/lib/format";
 
 export interface ContractClause {
-  heading: string;
+  // Stable identifier — title only, no number. Numbers are assigned by the
+  // renderer (page, PDF) based on position in the array, so conditional
+  // clauses don't leave gaps in the numbering.
+  title: string;
   paragraphs: string[];
   bullets?: string[];
 }
@@ -11,7 +14,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   const clauses: ContractClause[] = [];
 
   clauses.push({
-    heading: "1. PARTIES & PROGRAM DETAILS",
+    title: "PARTIES & PROGRAM DETAILS",
     paragraphs: [
       `This SAT Tutoring Services Agreement ("Agreement") is entered into as of ${formatDate(
         c.agreement_date
@@ -26,7 +29,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   });
 
   clauses.push({
-    heading: "2. PROGRAM SCOPE & SCHEDULE",
+    title: "PROGRAM SCOPE & SCHEDULE",
     paragraphs: [
       `Program Duration: ${c.program_duration}`,
       `Sessions Per Week: ${c.sessions_per_week}`,
@@ -40,7 +43,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   });
 
   clauses.push({
-    heading: "3. SERVICES INCLUDED",
+    title: "SERVICES INCLUDED",
     paragraphs: [],
     bullets: [
       "1-on-1 tutoring sessions with a matched, vetted tutor (SAT score 1550+)",
@@ -71,8 +74,6 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   paymentParagraphs.push(
     `All payments are processed securely via Stripe. Client authorizes StudyCore LLC to charge the payment method provided per the schedule above.`
   );
-  // Late-payments clause only applies when there are future scheduled
-  // payments (50/50 financed balance or full financing).
   if (c.payment_structure !== "Full Upfront") {
     paymentParagraphs.push(
       `Late Payments: If a scheduled payment fails, Client has a 5-day grace period to resolve the issue. If payment is not received within 5 days, sessions will be automatically paused until the outstanding balance is cleared. If payment remains unresolved after 14 days, the account will be considered delinquent and sessions suspended until resolved. Guarantee eligibility is unaffected provided payment is made within the grace period.`
@@ -83,7 +84,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   );
 
   clauses.push({
-    heading: "4. PAYMENT TERMS",
+    title: "PAYMENT TERMS",
     paragraphs: paymentParagraphs,
   });
 
@@ -107,13 +108,13 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   );
 
   clauses.push({
-    heading: "5. CANCELLATION & REFUND POLICY",
+    title: "CANCELLATION & REFUND POLICY",
     paragraphs: cancellationParagraphs,
   });
 
   if (c.guarantee_type === "Score Improvement Guarantee") {
     clauses.push({
-      heading: "6. PERFORMANCE GUARANTEE",
+      title: "PERFORMANCE GUARANTEE",
       paragraphs: [
         `Score Improvement Guarantee: In the event the student does not achieve a score improvement above their diagnostic baseline score on their first official SAT after program completion, StudyCore LLC will provide up to eight (8) complimentary tutoring sessions at no additional cost, to be completed before the next available SAT test date.`,
         `This guarantee is contingent upon all of the following conditions being met:`,
@@ -128,10 +129,11 @@ export function buildContractClauses(c: Contract): ContractClause[] {
     });
   } else if (c.guarantee_type === "Full Refund Guarantee") {
     clauses.push({
-      heading: "6. PERFORMANCE GUARANTEE",
+      title: "PERFORMANCE GUARANTEE",
       paragraphs: [
         `Full Refund Guarantee: In the event the student does not achieve ${c.guaranteed_target_score} on their first official SAT after program completion, Client will receive a full refund of the total program investment.`,
         `This guarantee is contingent upon all of the following conditions being met:`,
+        `Force Majeure: If the student is unable to take the SAT within the 60-day window due to College Board test cancellations or other events outside either party's control, the guarantee window will be extended to the next available test date.`,
       ],
       bullets: [
         "Student attended at least 90% of scheduled sessions",
@@ -142,12 +144,9 @@ export function buildContractClauses(c: Contract): ContractClause[] {
         `The guaranteed target score (${c.guaranteed_target_score}) is based on the diagnostic baseline score recorded at enrollment`,
       ],
     });
-    clauses[clauses.length - 1].paragraphs.push(
-      `Force Majeure: If the student is unable to take the SAT within the 60-day window due to College Board test cancellations or other events outside either party's control, the guarantee window will be extended to the next available test date.`
-    );
   } else {
     clauses.push({
-      heading: "6. PERFORMANCE GUARANTEE",
+      title: "PERFORMANCE GUARANTEE",
       paragraphs: [
         `No Performance Guarantee: StudyCore LLC does not offer a performance-based guarantee for this enrollment. StudyCore remains fully committed to delivering the highest quality instruction as described in Section 3.`,
       ],
@@ -155,8 +154,11 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   }
 
   clauses.push({
-    heading: "7. CLIENT RESPONSIBILITIES",
-    paragraphs: [`Client and Student agree to:`],
+    title: "CLIENT RESPONSIBILITIES",
+    paragraphs: [
+      `Client and Student agree to:`,
+      `Sessions missed without 24-hour notice may be forfeited at StudyCore's discretion and will count as completed sessions for guarantee eligibility purposes.`,
+    ],
     bullets: [
       "Attend all scheduled sessions or provide at least 24 hours notice to reschedule",
       "Student may reschedule up to a maximum of 2 times per calendar month with at least 24 hours notice. Additional reschedules beyond this limit will result in the session being forfeited and counted as completed for guarantee eligibility purposes.",
@@ -167,26 +169,23 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       "Keep payment method on file current and up to date",
     ],
   });
-  clauses[clauses.length - 1].paragraphs.push(
-    `Sessions missed without 24-hour notice may be forfeited at StudyCore's discretion and will count as completed sessions for guarantee eligibility purposes.`
-  );
 
   clauses.push({
-    heading: "8. NON-SOLICITATION",
+    title: "NON-SOLICITATION",
     paragraphs: [
       `Client agrees not to directly hire, solicit, or engage any StudyCore tutor for private tutoring services outside of StudyCore LLC during the program and for 12 months following the program end date. Violation of this clause will result in a fee equal to 6 months of the tutor's standard StudyCore rate, payable immediately upon demand.`,
     ],
   });
 
   clauses.push({
-    heading: "9. TUTOR ASSIGNMENT & SUBSTITUTION",
+    title: "TUTOR ASSIGNMENT & SUBSTITUTION",
     paragraphs: [
       `StudyCore LLC reserves the right to reassign a student to a different tutor if the original tutor becomes unavailable. StudyCore will notify Client of any tutor change and ensure continuity of instruction. Client may request a tutor change by contacting support@studycore.net.`,
     ],
   });
 
   clauses.push({
-    heading: "10. SESSION RECORDING & COMMUNICATIONS CONSENT",
+    title: "SESSION RECORDING & COMMUNICATIONS CONSENT",
     paragraphs: [
       `Sessions are recorded via Fathom for quality assurance and student progress review. Recordings are confidential and accessible only to the student, parent, and StudyCore team.`,
       `Client consents to receiving program-related communications via email and SMS from StudyCore LLC, including session reminders, progress updates, and billing notifications.`,
@@ -194,43 +193,56 @@ export function buildContractClauses(c: Contract): ContractClause[] {
     ],
   });
 
+  // Section 11 — Marketing & Media Release. Conditional on the closer
+  // having toggled the consent on at contract creation. When omitted, the
+  // remaining clauses simply renumber down by one (numbers are assigned by
+  // the renderer based on array position, so there are no gaps).
+  if (c.marketing_release_consent) {
+    clauses.push({
+      title: "MARKETING & MEDIA RELEASE",
+      paragraphs: [
+        `Client optionally consents to StudyCore LLC using the student's name, likeness, photo, score improvement results, testimonials, and session recordings for marketing and promotional purposes across any media including social media, website, and advertisements. This consent is given by signing this Agreement and may be revoked in writing at any time by contacting support@studycore.net.`,
+      ],
+    });
+  }
+
   clauses.push({
-    heading: "11. INTELLECTUAL PROPERTY",
+    title: "INTELLECTUAL PROPERTY",
     paragraphs: [
       `All materials provided by StudyCore LLC are proprietary intellectual property of StudyCore LLC. Client and Student may use materials solely for personal, non-commercial SAT preparation. Reproduction, distribution, or resale without written consent is prohibited.`,
     ],
   });
 
   clauses.push({
-    heading: "12. CONFIDENTIALITY & DATA",
+    title: "CONFIDENTIALITY & DATA",
     paragraphs: [
       `StudyCore LLC will keep Client and Student information confidential and will not sell or share personal data with third parties except as required to deliver services herein.`,
     ],
   });
 
   clauses.push({
-    heading: "13. LIMITATION OF LIABILITY",
+    title: "LIMITATION OF LIABILITY",
     paragraphs: [
       `StudyCore LLC's total liability shall not exceed the total amount paid by Client. StudyCore LLC is not liable for indirect, incidental, or consequential damages.`,
     ],
   });
 
   clauses.push({
-    heading: "14. FORCE MAJEURE",
+    title: "FORCE MAJEURE",
     paragraphs: [
       `Neither party shall be held liable for delays or failures in performance resulting from events outside their reasonable control, including but not limited to College Board test cancellations, natural disasters, acts of government, or other force majeure events. In such cases, applicable deadlines, including guarantee windows, will be extended to the next reasonable opportunity.`,
     ],
   });
 
   clauses.push({
-    heading: "15. DISPUTE RESOLUTION",
+    title: "DISPUTE RESOLUTION",
     paragraphs: [
       `Disputes shall first be attempted informally via support@studycore.net. If unresolved within 30 days, disputes shall be resolved by binding arbitration in San Ramon, California under AAA rules. Governed by California law.`,
     ],
   });
 
   clauses.push({
-    heading: "16. ENTIRE AGREEMENT",
+    title: "ENTIRE AGREEMENT",
     paragraphs: [
       `This Agreement supersedes all prior discussions and agreements. Modifications must be in writing signed by both parties. If any provision is found unenforceable, remaining provisions remain in full force.`,
     ],

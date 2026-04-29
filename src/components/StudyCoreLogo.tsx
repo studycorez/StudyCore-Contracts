@@ -1,9 +1,10 @@
 /**
- * StudyCore brand logo. Sourced from /public/studycore-logo.svg by default,
- * or override via NEXT_PUBLIC_LOGO_URL (useful for pointing at a hosted asset
- * on studycore.net without redeploying just to swap the image).
+ * StudyCore brand logo. Sourced from /public/studycore-logo.png by default
+ * (drop your PNG into the public/ folder at that filename and it will be
+ * picked up automatically). Override with NEXT_PUBLIC_LOGO_URL to point at
+ * a hosted asset on studycore.net without redeploying.
  */
-const LOGO_URL = process.env.NEXT_PUBLIC_LOGO_URL || "/studycore-logo.svg";
+const LOGO_URL = process.env.NEXT_PUBLIC_LOGO_URL || "/studycore-logo.png";
 
 interface Props {
   className?: string;
@@ -13,7 +14,7 @@ interface Props {
 
 export default function StudyCoreLogo({
   className = "",
-  height = 22,
+  height = 24,
   alt = "StudyCore",
 }: Props) {
   return (

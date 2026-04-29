@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -11,98 +11,98 @@
 
 html,
 body {
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  font-feature-settings: "ss01", "cv11";
   color: #0f172a;
-  background-color: #f8fafc;
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer components {
+  /* App-wide (closer / admin / login) — keep some rounding here so the
+   * internal tools still look like a normal product. The signing flow
+   * (.doc-* classes below) is sharp by design.
+   */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-orange px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-dark focus:outline-none focus:ring-2 focus:ring-orange/40 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-md bg-orange px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-dark focus:outline-none focus:ring-2 focus:ring-orange/40 disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg border border-navy/20 bg-white px-5 py-2.5 text-sm font-semibold text-navy shadow-sm transition hover:bg-navy/5 focus:outline-none focus:ring-2 focus:ring-navy/30;
+    @apply inline-flex items-center justify-center rounded-md border border-navy/20 bg-white px-5 py-2.5 text-sm font-semibold text-navy transition hover:bg-navy/5 focus:outline-none focus:ring-2 focus:ring-navy/30;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-navy/70 transition hover:bg-navy/5 hover:text-navy;
+    @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium text-navy/70 transition hover:bg-navy/5 hover:text-navy;
   }
   .input {
-    @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20;
+    @apply block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20;
   }
   .label {
     @apply block text-sm font-medium text-slate-700 mb-1;
   }
   .card {
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-lg border border-slate-200 bg-white;
   }
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
 
-  /* ───────────── "Document" theme — signing page only ─────────────
-   * Premium legal/fintech aesthetic: sharp corners, restrained color,
-   * tight typography, generous reading width, serif body for clauses.
-   * Inspiration: Stripe, Linear, Notion — the kind of UI that signals
-   * "this is a real legal agreement," not a startup template.
+  /* ─────────────────────── Signing page (the document) ───────────────────────
+   * Plus Jakarta Sans throughout, sharp corners everywhere, no shadows, no
+   * card-like UI. Reads as a real legal agreement: white paper, navy section
+   * marks, generous reading width. Brand orange is reserved for the rest of
+   * the app and is intentionally absent from the signing flow.
    */
   .doc-shell {
-    @apply min-h-screen bg-[#f6f5f1] text-slate-900 antialiased;
+    @apply min-h-screen bg-white text-slate-900;
   }
   .doc-header {
-    @apply border-b border-slate-200 bg-white/90 backdrop-blur-sm;
+    @apply border-b border-slate-200 bg-white;
   }
   .doc-eyebrow {
-    @apply text-[10px] font-medium uppercase tracking-[0.22em] text-slate-500;
+    @apply text-[10.5px] font-semibold uppercase tracking-[0.22em] text-slate-500;
   }
   .doc-eyebrow-accent {
-    @apply text-[10px] font-semibold uppercase tracking-[0.22em] text-orange;
+    @apply text-[10.5px] font-semibold uppercase tracking-[0.22em] text-navy;
   }
   .doc-eyebrow-muted {
-    @apply text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400;
+    @apply text-[10.5px] font-medium uppercase tracking-[0.22em] text-slate-400;
   }
   .doc-rule {
     @apply h-px w-full bg-slate-200;
   }
-  .doc-divider {
-    @apply h-px w-full bg-slate-200/70;
-  }
   .doc-pane {
     @apply border border-slate-200 bg-white;
   }
-  .doc-pane-padded {
-    @apply doc-pane p-6 sm:p-8;
-  }
   .doc-meta-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400;
-  }
-  .doc-meta-value {
-    @apply mt-1 text-[15px] font-semibold text-navy;
+    @apply text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400;
   }
   .doc-h1 {
-    @apply font-serif text-[26px] font-semibold leading-[1.15] tracking-[-0.01em] text-navy sm:text-[32px];
+    @apply font-sans text-[28px] font-semibold leading-[1.15] tracking-[-0.02em] text-navy sm:text-[34px];
   }
+  /* Section headers throughout the document — small caps feel via uppercase
+   * + heavy letter-spacing in navy. */
   .doc-h2 {
-    @apply font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-navy;
+    @apply font-sans text-[11px] font-bold uppercase tracking-[0.22em] text-navy;
   }
   .doc-body {
-    @apply font-serif text-[15.5px] leading-[1.72] text-slate-800;
+    @apply font-sans text-[14.5px] leading-[1.78] text-slate-700;
   }
   .doc-body p + p {
-    @apply mt-3;
+    @apply mt-3.5;
   }
   .doc-section-num {
-    @apply mr-3 font-mono text-[11px] font-medium tracking-[0.08em] text-slate-400;
+    @apply mr-3 inline-block min-w-[1.75rem] font-sans text-[11px] font-medium tracking-[0.08em] text-slate-400;
   }
   .doc-btn-primary {
-    @apply inline-flex w-full items-center justify-center bg-navy px-6 py-3.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400;
+    @apply inline-flex w-full items-center justify-center bg-navy px-6 py-4 text-[12.5px] font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400;
   }
   .doc-btn-secondary {
-    @apply inline-flex items-center justify-center border border-slate-300 bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-700 transition hover:border-navy/40 hover:text-navy;
+    @apply inline-flex items-center justify-center border border-slate-300 bg-white px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-navy hover:text-navy;
   }
   .doc-link-subtle {
-    @apply text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400 transition hover:text-navy;
+    @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 transition hover:text-navy;
   }
   .doc-input-checkbox {
-    @apply mt-[5px] h-4 w-4 flex-shrink-0 rounded-none border-slate-400 text-navy focus:ring-2 focus:ring-navy/30;
+    @apply mt-[3px] h-4 w-4 flex-shrink-0 rounded-none border-slate-400 text-navy focus:ring-2 focus:ring-navy/30;
   }
 }

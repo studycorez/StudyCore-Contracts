@@ -64,6 +64,9 @@ create table if not exists public.contracts (
   trial_window boolean not null default false,
   show_cancellation_refund_terms boolean not null default true,
 
+  -- Marketing & media release (Section 11) — opt-in
+  marketing_release_consent boolean not null default false,
+
   -- Lifecycle
   status text not null default 'draft' check (status in ('draft','sent','viewed','signed','completed')),
   signed_at timestamptz,

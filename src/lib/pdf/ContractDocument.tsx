@@ -169,7 +169,9 @@ export default function ContractDocument({
 
         {clauses.map((clause, idx) => (
           <View key={idx} style={styles.clause} wrap={false}>
-            <Text style={styles.heading}>{clause.heading}</Text>
+            <Text style={styles.heading}>
+              {idx + 1}. {clause.title}
+            </Text>
             {clause.paragraphs.map((p, pi) => (
               <Text key={pi} style={styles.para}>
                 {p}
@@ -185,7 +187,7 @@ export default function ContractDocument({
         ))}
 
         <View style={styles.signatureBlock} wrap={false}>
-          <Text style={styles.heading}>17. SIGNATURES</Text>
+          <Text style={styles.heading}>{clauses.length + 1}. SIGNATURES</Text>
           <View style={styles.sigRow}>
             <View style={styles.sigCol}>
               <Text style={styles.sigLabel}>Client (Parent / Guardian)</Text>
