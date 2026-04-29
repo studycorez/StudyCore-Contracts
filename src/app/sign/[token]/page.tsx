@@ -207,23 +207,33 @@ export default async function SignPage({
           </p>
         </div>
 
-        {/* The legal document — fixed-height scrollable box. The signature
-          * canvas and Sign & Pay button below sit OUTSIDE this container in
-          * normal page flow. */}
+        {/* ──────────────────────────────────────────────────────────────────
+          * Scrollable contract box. The contract is rendered INSIDE this
+          * 500px-tall container; the parent scrolls within it. The signature
+          * canvas, payment block, and Sign & Pay button below sit OUTSIDE
+          * and BELOW this container in normal page flow.
+          * Inline styles are deliberate so no Tailwind layer / preflight
+          * rule can override them.
+          * ────────────────────────────────────────────────────────────── */}
         <div
           style={{
+            display: "block",
+            boxSizing: "border-box",
             height: "500px",
+            maxHeight: "500px",
             overflowY: "scroll",
             border: "1px solid #e5e7eb",
             background: "#ffffff",
+            position: "relative",
           }}
         >
-          <article
-            className="px-6 py-10 sm:px-10 sm:py-12"
-            tabIndex={0}
-            aria-label="SAT Tutoring Services Agreement"
+          <div
+            style={{
+              padding: "40px",
+              boxSizing: "border-box",
+            }}
           >
-            <header className="mb-12 border-b border-slate-200 pb-10">
+            <header className="mb-10 border-b border-slate-200 pb-8">
               <div className="doc-eyebrow-muted">StudyCore LLC</div>
               <h2 className="doc-h1 mt-3">SAT Tutoring Services Agreement</h2>
               <p className="mt-4 max-w-prose text-[14.5px] leading-[1.75] text-slate-600">
@@ -238,11 +248,14 @@ export default async function SignPage({
               ))}
             </div>
 
-            <footer className="mt-16 border-t border-slate-200 pt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+            <footer className="mt-14 border-t border-slate-200 pt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
               StudyCore LLC &middot; San Ramon, California &middot; support@studycore.net
             </footer>
-          </article>
+          </div>
         </div>
+        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+          Scroll within the box above to read the full agreement
+        </p>
 
         <div className="mt-16">
           <SignAndPay
