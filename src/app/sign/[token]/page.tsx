@@ -10,17 +10,14 @@ import FinalizeAfterRedirect from "./FinalizeAfterRedirect";
 
 export const dynamic = "force-dynamic";
 
-function redirectErrorFor(status: string | undefined): string | null {
-  if (!status || status === "succeeded") return null;
+function errorForPiStatus(status: string): string {
   if (status === "processing") {
     return "Your payment is still processing. We'll email you once it confirms — you don't need to do anything else right now.";
   }
-  if (status === "requires_payment_method" || status === "failed") {
+  if (status === "requires_payment_method") {
     return "Payment was not completed. Please try again or use a different payment method.";
   }
-  if (status === "requires_action" || status === "canceled") {
-    return "Payment was not completed. Please try again.";
-  }
+  // requires_action, requires_confirmation, canceled, or anything else
   return "Payment was not completed. Please try again.";
 }
 
@@ -57,33 +54,34 @@ export default async function SignPage({
   const dueAtSigningCents = Math.round(Number(contract.amount_due_at_signing) * 100);
 
   // The parent has just been redirected back to us from a Stripe redirect-based
-  // payment method (Klarna, Affirm, etc.). The query params tell us how it
-  // went. We re-verify the payment status server-side before honoring it.
-  const returnedFromRedirect = !!searchParams.payment_intent && !!searchParams.redirect_status;
+  // payment method (Klarna, Affirm, etc.). The URL query params (payment_intent,
+  // redirect_status) are not trustworthy on their own — Stripe can report
+  // `redirect_status=succeeded` for an intent that's still `processing` or even
+  // `requires_payment_method`, and the URL can be tampered with. We always
+  // re-verify the PaymentIntent server-side against the id we stored at
+  // creation time, and only proceed to the welcome page when the intent is
+  // actually `succeeded`.
+  const returnedFromRedirect =
+    !!searchParams.payment_intent || !!searchParams.payment_intent_client_secret;
   let verifiedRedirectSucceeded = false;
   let redirectError: string | null = null;
 
-  if (returnedFromRedirect && !isComplete) {
-    if (searchParams.redirect_status === "succeeded") {
-      try {
-        const stripe = getStripe();
-        const pi = await stripe.paymentIntents.retrieve(searchParams.payment_intent!);
-        if (
-          pi.status === "succeeded" &&
-          pi.metadata?.contract_id === contract.id
-        ) {
-          verifiedRedirectSucceeded = true;
-        } else {
-          redirectError =
-            "Payment did not confirm. Please try again or use a different payment method.";
-        }
-      } catch {
-        redirectError =
-          "We couldn't verify your payment. Please try again or contact support@studycore.net.";
+  if (returnedFromRedirect && !isComplete && contract.stripe_payment_intent_id) {
+    try {
+      const stripe = getStripe();
+      const pi = await stripe.paymentIntents.retrieve(contract.stripe_payment_intent_id);
+      if (pi.status === "succeeded") {
+        verifiedRedirectSucceeded = true;
+      } else {
+        redirectError = errorForPiStatus(pi.status);
       }
-    } else {
-      redirectError = redirectErrorFor(searchParams.redirect_status);
+    } catch {
+      redirectError =
+        "We couldn't verify your payment. Please try again or contact support@studycore.net.";
     }
+  } else if (returnedFromRedirect && !isComplete) {
+    // Redirected back but we have no stored PI id — treat as a failure.
+    redirectError = "Payment was not completed. Please try again.";
   }
 
   // Set up Stripe payment intent if we have an amount due and not yet paid.

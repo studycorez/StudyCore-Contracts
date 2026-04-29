@@ -13,6 +13,30 @@ export default function FinalizeAfterRedirect({ token }: { token: string }) {
     if (ranRef.current) return;
     ranRef.current = true;
 
+    // Strip the Stripe redirect query params from the address bar immediately,
+    // before we do anything else. This keeps payment_intent and
+    // payment_intent_client_secret out of the URL while the "finalizing" UI
+    // shows, and avoids re-triggering the redirect-finalize flow on refresh.
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const stripeParams = [
+        "payment_intent",
+        "payment_intent_client_secret",
+        "redirect_status",
+        "source_redirect_slug",
+      ];
+      let dirty = false;
+      for (const p of stripeParams) {
+        if (url.searchParams.has(p)) {
+          url.searchParams.delete(p);
+          dirty = true;
+        }
+      }
+      if (dirty) {
+        window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+      }
+    }
+
     (async () => {
       let signatureDataUrl: string | null = null;
       try {
