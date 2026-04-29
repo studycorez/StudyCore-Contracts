@@ -241,28 +241,44 @@ export default async function SignPage({
           />
         </section>
 
-        {/* The legal document itself */}
-        <article className="doc-pane mb-10 px-6 py-10 sm:px-12 sm:py-14">
-          <header className="mb-10 border-b border-slate-300/80 pb-8">
-            <div className="doc-eyebrow-accent">StudyCore LLC</div>
-            <h2 className="doc-h1 mt-2">SAT Tutoring Services Agreement</h2>
-            <p className="mt-3 font-serif text-[14px] text-slate-600">
-              Effective {formatDate(contract.agreement_date)} between StudyCore LLC and{" "}
-              {contract.parent_name}, parent or legal guardian of {contract.student_name}.
-            </p>
-          </header>
+        {/* The legal document — fixed-height scrollable box. The signature
+          * canvas, payment block, and Sign & Pay button below sit OUTSIDE
+          * this container in normal page flow. Inline styles to make the
+          * height/overflow constraints unmissable. */}
+        <div
+          style={{
+            display: "block",
+            boxSizing: "border-box",
+            height: "500px",
+            maxHeight: "500px",
+            overflowY: "scroll",
+            border: "1px solid #e5e7eb",
+            background: "#ffffff",
+            marginBottom: "40px",
+          }}
+        >
+          <article className="px-6 py-10 sm:px-12 sm:py-14">
+            <header className="mb-10 border-b border-slate-300/80 pb-8">
+              <div className="doc-eyebrow-accent">StudyCore LLC</div>
+              <h2 className="doc-h1 mt-2">SAT Tutoring Services Agreement</h2>
+              <p className="mt-3 font-serif text-[14px] text-slate-600">
+                Effective {formatDate(contract.agreement_date)} between StudyCore LLC and{" "}
+                {contract.parent_name}, parent or legal guardian of {contract.student_name}.
+              </p>
+            </header>
 
-          <div className="space-y-9">
-            {clauses.map((clause) => (
-              <ClauseBlock key={clause.heading} clause={clause} />
-            ))}
-          </div>
+            <div className="space-y-9">
+              {clauses.map((clause) => (
+                <ClauseBlock key={clause.heading} clause={clause} />
+              ))}
+            </div>
 
-          <footer className="mt-12 border-t border-slate-200 pt-6 font-serif text-[12px] leading-relaxed text-slate-500">
-            StudyCore LLC &nbsp;·&nbsp; San Ramon, California &nbsp;·&nbsp;{" "}
-            support@studycore.net &nbsp;·&nbsp; studycore.net
-          </footer>
-        </article>
+            <footer className="mt-12 border-t border-slate-200 pt-6 font-serif text-[12px] leading-relaxed text-slate-500">
+              StudyCore LLC &nbsp;·&nbsp; San Ramon, California &nbsp;·&nbsp;{" "}
+              support@studycore.net &nbsp;·&nbsp; studycore.net
+            </footer>
+          </article>
+        </div>
 
         <SignAndPay
           contractId={contract.id}
