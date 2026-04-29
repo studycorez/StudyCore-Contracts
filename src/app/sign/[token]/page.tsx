@@ -157,10 +157,10 @@ export default async function SignPage({
     return (
       <main className="doc-shell">
         <DocHeader />
-        <div className="mx-auto max-w-2xl px-6 py-24 text-center">
+        <div className="mx-auto max-w-xl px-6 py-24 text-center">
           <div className="doc-eyebrow-accent">Signed &amp; Confirmed</div>
           <h1 className="doc-h1 mt-3">This agreement has been countersigned.</h1>
-          <p className="mt-4 font-serif text-[15px] leading-[1.7] text-slate-700">
+          <p className="mt-5 font-serif text-[15px] leading-[1.72] text-slate-600">
             You signed and paid for {contract.student_name}&apos;s enrollment. A copy was
             emailed to you. If you need it again, contact{" "}
             <a className="text-navy underline-offset-2 hover:underline" href="mailto:support@studycore.net">
@@ -173,7 +173,7 @@ export default async function SignPage({
               href={contract.pdf_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="doc-btn-secondary mt-8"
+              className="doc-btn-secondary mt-10"
             >
               Download signed PDF
             </a>
@@ -198,69 +198,67 @@ export default async function SignPage({
     );
   }
 
+  const reference = contract.id.slice(0, 8).toUpperCase();
+
   return (
     <main className="doc-shell">
-      <DocHeader />
+      <DocHeader reference={reference} />
 
-      <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
-        {/* Document identifier strip */}
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto max-w-3xl px-5 py-12 sm:py-16">
+        {/* Document identifier strip — restrained, archive-style */}
+        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="doc-eyebrow-accent">SAT Tutoring Services Agreement</div>
-            <h1 className="doc-h1 mt-2">
-              For {contract.student_name}
+            <div className="doc-eyebrow-muted">SAT Tutoring Services Agreement</div>
+            <h1 className="doc-h1 mt-3">
+              Prepared for {contract.student_name}
             </h1>
-            <p className="mt-1 font-serif text-[14px] text-slate-600">
-              Issued to {contract.parent_name} &middot; Agreement dated{" "}
+            <p className="mt-2 font-serif text-[14px] leading-[1.6] text-slate-500">
+              Issued to {contract.parent_name} &middot; Effective{" "}
               {formatDate(contract.agreement_date)}
             </p>
           </div>
-          <div className="text-left sm:text-right">
-            <div className="doc-meta-label">Reference</div>
-            <div className="mt-1 font-mono text-[12px] text-slate-700">
-              {contract.id.slice(0, 8).toUpperCase()}
-            </div>
-          </div>
         </div>
 
-        {/* Premium summary bar — flat, sharp, no shadow */}
-        <section className="doc-pane mb-10 grid grid-cols-3 divide-x divide-slate-200">
-          <SummaryCell
-            label="Total Program"
-            value={formatMoney(contract.total_price)}
-          />
-          <SummaryCell
-            label="Due at Signing"
-            value={formatMoney(contract.amount_due_at_signing)}
-            accent
-          />
-          <SummaryCell
-            label="Structure"
-            value={contract.payment_structure}
-            small
-          />
+        {/* Premium summary — minimal grid, no dividers, single bottom rule */}
+        <section className="mb-12 border-y border-slate-200 bg-white">
+          <dl className="grid grid-cols-1 sm:grid-cols-3">
+            <SummaryCell
+              label="Total Program"
+              value={formatMoney(contract.total_price)}
+            />
+            <SummaryCell
+              label="Due at Signing"
+              value={formatMoney(contract.amount_due_at_signing)}
+              accent
+            />
+            <SummaryCell
+              label="Payment Structure"
+              value={contract.payment_structure}
+              small
+            />
+          </dl>
         </section>
 
-        {/* The legal document itself */}
-        <article className="doc-pane mb-10 px-6 py-10 sm:px-12 sm:py-14">
-          <header className="mb-10 border-b border-slate-300/80 pb-8">
-            <div className="doc-eyebrow-accent">StudyCore LLC</div>
-            <h2 className="doc-h1 mt-2">SAT Tutoring Services Agreement</h2>
-            <p className="mt-3 font-serif text-[14px] text-slate-600">
+        {/* The legal document itself — clean, generous, paper-like */}
+        <article className="doc-pane mb-12 px-6 py-12 sm:px-14 sm:py-16">
+          <header className="mb-12 border-b border-slate-200 pb-10">
+            <div className="doc-eyebrow-muted">StudyCore LLC</div>
+            <h2 className="doc-h1 mt-3">SAT Tutoring Services Agreement</h2>
+            <p className="mt-4 max-w-prose font-serif text-[14.5px] leading-[1.7] text-slate-600">
               Effective {formatDate(contract.agreement_date)} between StudyCore LLC and{" "}
               {contract.parent_name}, parent or legal guardian of {contract.student_name}.
             </p>
           </header>
 
-          <div className="space-y-9">
+          <div className="space-y-10">
             {clauses.map((clause) => (
               <ClauseBlock key={clause.heading} clause={clause} />
             ))}
           </div>
 
-          <footer className="mt-12 border-t border-slate-200 pt-6 font-serif text-[12px] leading-relaxed text-slate-500">
+          <footer className="mt-14 border-t border-slate-200 pt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
             StudyCore LLC &nbsp;·&nbsp; San Ramon, California &nbsp;·&nbsp;{" "}
-            support@studycore.net &nbsp;·&nbsp; studycore.net
+            support@studycore.net
           </footer>
         </article>
 
@@ -274,7 +272,7 @@ export default async function SignPage({
           initialError={redirectError}
         />
 
-        <p className="mt-10 text-center font-serif text-[12px] text-slate-500">
+        <p className="mt-12 text-center font-serif text-[12.5px] leading-[1.7] text-slate-500">
           By submitting, you acknowledge electronic signature has the same legal
           effect as a handwritten signature under the U.S. ESIGN Act.
         </p>
@@ -283,15 +281,22 @@ export default async function SignPage({
   );
 }
 
-function DocHeader() {
+function DocHeader({ reference }: { reference?: string }) {
   return (
     <header className="doc-header">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-5">
+      <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
         <a href="https://studycore.net" className="flex items-center" aria-label="StudyCore">
-          <StudyCoreLogo height={22} />
+          <StudyCoreLogo height={24} />
         </a>
-        <div className="hidden items-center gap-6 text-right sm:flex">
-          <div className="doc-eyebrow">Tutoring Services Agreement</div>
+        <div className="flex items-center gap-5 text-right">
+          <div className="hidden sm:block">
+            <div className="doc-eyebrow-muted">Document</div>
+            <div className="mt-0.5 font-mono text-[11px] text-slate-600">
+              {reference ?? "—"}
+            </div>
+          </div>
+          <span aria-hidden className="hidden h-6 w-px bg-slate-200 sm:block" />
+          <div className="doc-eyebrow">Tutoring Agreement</div>
         </div>
       </div>
     </header>
@@ -310,18 +315,25 @@ function SummaryCell({
   small?: boolean;
 }) {
   return (
-    <div className="px-5 py-5 sm:px-6 sm:py-6">
-      <div className="doc-meta-label">{label}</div>
-      <div
-        className={
-          (small
-            ? "mt-2 font-sans text-[14px] font-medium text-slate-800"
-            : "mt-2 font-sans text-[20px] font-semibold tracking-tight ") +
-          (accent ? " text-orange" : " text-navy")
-        }
-      >
-        {value}
-      </div>
+    <div className="border-b border-slate-200 px-5 py-6 sm:border-b-0 sm:border-r sm:px-7 sm:py-7 [&:last-child]:border-r-0">
+      <dt className="doc-meta-label">{label}</dt>
+      <dd className="mt-2.5">
+        {small ? (
+          <span className="font-sans text-[14px] font-medium leading-snug text-slate-800">
+            {value}
+          </span>
+        ) : (
+          <span className="font-serif text-[24px] font-semibold leading-none tracking-[-0.01em] text-navy">
+            {value}
+            {accent && (
+              <span
+                aria-hidden
+                className="ml-2 inline-block h-1.5 w-1.5 -translate-y-[3px] bg-orange align-middle"
+              />
+            )}
+          </span>
+        )}
+      </dd>
     </div>
   );
 }
@@ -331,28 +343,26 @@ function ClauseBlock({
 }: {
   clause: { heading: string; paragraphs: string[]; bullets?: string[] };
 }) {
-  // Heading shape is e.g. "1. PARTIES & PROGRAM DETAILS" — split it for the
-  // refined two-tone heading style.
   const m = clause.heading.match(/^(\d+)\.\s*(.+)$/);
   const num = m?.[1];
   const title = m ? m[2] : clause.heading;
   return (
     <section>
       <h3 className="mb-4 flex items-baseline">
-        {num && <span className="doc-section-num">{num.padStart(2, "0")}</span>}
+        {num && <span className="doc-section-num">§ {num.padStart(2, "0")}</span>}
         <span className="doc-h2">{title}</span>
       </h3>
-      <div className="doc-body space-y-3">
+      <div className="doc-body">
         {clause.paragraphs.map((p, i) => (
           <p key={i} className="whitespace-pre-line">
             {p}
           </p>
         ))}
         {clause.bullets && clause.bullets.length > 0 && (
-          <ul className="mt-2 space-y-2 pl-0">
+          <ul className="mt-4 space-y-2 pl-0">
             {clause.bullets.map((b, i) => (
               <li key={i} className="flex gap-3 text-slate-800">
-                <span aria-hidden className="mt-[10px] h-px w-3 flex-shrink-0 bg-orange" />
+                <span aria-hidden className="mt-[11px] h-px w-3 flex-shrink-0 bg-slate-400" />
                 <span>{b}</span>
               </li>
             ))}

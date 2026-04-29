@@ -1,10 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 40" role="img" aria-label="StudyCore">
-  <style>
-    .wm { font-family: "Inter", system-ui, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
-    .wm-accent { fill: #F97316; }
-    .wm-mark { fill: #1A3C6B; }
-  </style>
-  <g transform="translate(0,28)">
-    <text class="wm wm-mark">Study<tspan class="wm-accent">Core</tspan></text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 40" role="img" aria-label="StudyCore" preserveAspectRatio="xMinYMid meet">
+  <defs>
+    <style>
+      .wm { font-family: "Inter", "Helvetica Neue", system-ui, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.018em; }
+      .wm-mark { fill: #1A3C6B; }
+      .wm-dot { fill: #F97316; }
+    </style>
+  </defs>
+  <!-- Square logomark with two precise rules — premium, fintech-feeling -->
+  <g transform="translate(0,7)">
+    <rect x="0" y="0" width="26" height="26" fill="#1A3C6B"/>
+    <rect x="6" y="9" width="14" height="2" fill="#FFFFFF"/>
+    <rect x="6" y="15" width="9" height="2" fill="#F97316"/>
   </g>
+  <!-- Wordmark -->
+  <text class="wm wm-mark" x="36" y="28">StudyCore<tspan class="wm-dot">.</tspan></text>
 </svg>

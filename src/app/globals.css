@@ -42,59 +42,67 @@ body {
   /* ───────────── "Document" theme — signing page only ─────────────
    * Premium legal/fintech aesthetic: sharp corners, restrained color,
    * tight typography, generous reading width, serif body for clauses.
+   * Inspiration: Stripe, Linear, Notion — the kind of UI that signals
+   * "this is a real legal agreement," not a startup template.
    */
   .doc-shell {
-    @apply min-h-screen bg-[#f4f3ef] text-slate-900;
+    @apply min-h-screen bg-[#f6f5f1] text-slate-900 antialiased;
   }
   .doc-header {
-    @apply border-b border-slate-300/80 bg-white;
+    @apply border-b border-slate-200 bg-white/90 backdrop-blur-sm;
   }
   .doc-eyebrow {
-    @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500;
+    @apply text-[10px] font-medium uppercase tracking-[0.22em] text-slate-500;
   }
   .doc-eyebrow-accent {
-    @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-orange;
+    @apply text-[10px] font-semibold uppercase tracking-[0.22em] text-orange;
+  }
+  .doc-eyebrow-muted {
+    @apply text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400;
   }
   .doc-rule {
-    @apply h-px w-full bg-slate-300/70;
-  }
-  .doc-divider {
     @apply h-px w-full bg-slate-200;
   }
+  .doc-divider {
+    @apply h-px w-full bg-slate-200/70;
+  }
   .doc-pane {
-    @apply border border-slate-300/80 bg-white;
+    @apply border border-slate-200 bg-white;
   }
   .doc-pane-padded {
     @apply doc-pane p-6 sm:p-8;
   }
   .doc-meta-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500;
+    @apply text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400;
   }
   .doc-meta-value {
     @apply mt-1 text-[15px] font-semibold text-navy;
   }
   .doc-h1 {
-    @apply font-serif text-[26px] font-semibold leading-tight tracking-tight text-navy sm:text-[30px];
+    @apply font-serif text-[26px] font-semibold leading-[1.15] tracking-[-0.01em] text-navy sm:text-[32px];
   }
   .doc-h2 {
-    @apply font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-navy;
+    @apply font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-navy;
   }
   .doc-body {
-    @apply font-serif text-[15px] leading-[1.7] text-slate-800;
+    @apply font-serif text-[15.5px] leading-[1.72] text-slate-800;
   }
-  .doc-bullets {
-    @apply font-serif text-[15px] leading-[1.7] text-slate-800;
+  .doc-body p + p {
+    @apply mt-3;
   }
   .doc-section-num {
-    @apply mr-3 font-sans text-[11px] font-semibold tracking-[0.16em] text-orange;
+    @apply mr-3 font-mono text-[11px] font-medium tracking-[0.08em] text-slate-400;
   }
   .doc-btn-primary {
-    @apply inline-flex w-full items-center justify-center bg-navy px-6 py-3.5 text-[13px] font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400;
+    @apply inline-flex w-full items-center justify-center bg-navy px-6 py-3.5 text-[12px] font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-navy-dark focus:outline-none focus:ring-2 focus:ring-navy/40 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400;
   }
   .doc-btn-secondary {
-    @apply inline-flex items-center justify-center border border-slate-300 bg-white px-4 py-2 text-[12px] font-medium uppercase tracking-[0.14em] text-slate-700 transition hover:border-navy/30 hover:text-navy;
+    @apply inline-flex items-center justify-center border border-slate-300 bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-700 transition hover:border-navy/40 hover:text-navy;
   }
   .doc-link-subtle {
-    @apply text-[12px] font-medium tracking-wide text-slate-500 transition hover:text-navy;
+    @apply text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400 transition hover:text-navy;
+  }
+  .doc-input-checkbox {
+    @apply mt-[5px] h-4 w-4 flex-shrink-0 rounded-none border-slate-400 text-navy focus:ring-2 focus:ring-navy/30;
   }
 }
