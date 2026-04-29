@@ -207,18 +207,19 @@ export default async function SignPage({
           </p>
         </div>
 
-        {/* The legal document — fixed-height scrollable box so the parent can
-          * scroll the agreement without scrolling the page. The signature and
-          * payment sections below stay in normal flow. */}
-        <div className="border border-slate-300 bg-white">
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-3">
-            <div className="doc-eyebrow-muted">Agreement</div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
-              Scroll to read in full
-            </div>
-          </div>
+        {/* The legal document — fixed-height scrollable box. The signature
+          * canvas and Sign & Pay button below sit OUTSIDE this container in
+          * normal page flow. */}
+        <div
+          style={{
+            height: "500px",
+            overflowY: "scroll",
+            border: "1px solid #e5e7eb",
+            background: "#ffffff",
+          }}
+        >
           <article
-            className="max-h-[60vh] overflow-y-scroll px-6 py-10 sm:px-10 sm:py-12"
+            className="px-6 py-10 sm:px-10 sm:py-12"
             tabIndex={0}
             aria-label="SAT Tutoring Services Agreement"
           >
