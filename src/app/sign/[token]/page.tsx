@@ -288,7 +288,7 @@ function DocHeader() {
     <header className="doc-header">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-5">
         <a href="https://studycore.net" className="flex items-center" aria-label="StudyCore">
-          <StudyCoreLogo height={22} />
+          <StudyCoreLogo height={44} />
         </a>
         <div className="hidden items-center gap-6 text-right sm:flex">
           <div className="doc-eyebrow">Tutoring Services Agreement</div>
