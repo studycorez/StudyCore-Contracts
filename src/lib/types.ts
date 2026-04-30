@@ -8,9 +8,10 @@ export type ContractStatus =
   | "completed";
 
 export type PaymentStructure =
-  | "Full Upfront"
-  | "50% Upfront + Financed Balance"
-  | "Full Financing via Stripe";
+  | "Paid in Full upfront"
+  | "Internal payment plan"
+  | "Paid In Full split payments"
+  | "Full financing";
 
 export type GuaranteeType =
   | "Score Improvement Guarantee"

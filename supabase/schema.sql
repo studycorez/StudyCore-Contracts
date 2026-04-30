@@ -43,9 +43,10 @@ create table if not exists public.contracts (
   -- Section 3 — Payment
   total_price numeric(10,2) not null,
   payment_structure text not null check (payment_structure in (
-    'Full Upfront',
-    '50% Upfront + Financed Balance',
-    'Full Financing via Stripe'
+    'Paid in Full upfront',
+    'Internal payment plan',
+    'Paid In Full split payments',
+    'Full financing'
   )),
   upfront_amount numeric(10,2),
   remaining_balance numeric(10,2),

@@ -57,23 +57,16 @@ export function buildContractClauses(c: Contract): ContractClause[] {
     `Total Program Investment: ${formatMoney(c.total_price)}`,
     `Payment Structure: ${c.payment_structure}`,
   ];
-  if (c.payment_structure === "50% Upfront + Financed Balance") {
-    paymentParagraphs.push(
-      `Upfront Payment: ${formatMoney(c.upfront_amount)} | Remaining Balance: ${formatMoney(
-        c.remaining_balance
-      )}`
-    );
-  }
-  if (c.payment_structure === "Full Financing via Stripe" && c.financing_details) {
-    paymentParagraphs.push(`Financing Plan: ${c.financing_details}`);
+  if (c.financing_details) {
+    const label =
+      c.payment_structure === "Internal payment plan" ? "Payment Plan" : "Financing Plan";
+    paymentParagraphs.push(`${label}: ${c.financing_details}`);
   }
   paymentParagraphs.push(`Amount Due at Signing: ${formatMoney(c.amount_due_at_signing)}`);
   paymentParagraphs.push(
     `All payments are processed securely via Stripe. Client authorizes StudyCore LLC to charge the payment method provided per the schedule above.`
   );
-  // Late-payments clause only applies when there are future scheduled
-  // payments (50/50 financed balance or full financing).
-  if (c.payment_structure !== "Full Upfront") {
+  if (c.payment_structure !== "Paid in Full upfront") {
     paymentParagraphs.push(
       `Late Payments: If a scheduled payment fails, Client has a 5-day grace period to resolve the issue. If payment is not received within 5 days, sessions will be automatically paused until the outstanding balance is cleared. If payment remains unresolved after 14 days, the account will be considered delinquent and sessions suspended until resolved. Guarantee eligibility is unaffected provided payment is made within the grace period.`
     );

@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type PaymentStructure =
-  | "Full Upfront"
-  | "50% Upfront + Financed Balance"
-  | "Full Financing via Stripe";
+  | "Paid in Full upfront"
+  | "Internal payment plan"
+  | "Paid In Full split payments"
+  | "Full financing";
 type GuaranteeType =
   | "Score Improvement Guarantee"
   | "Full Refund Guarantee"
@@ -40,8 +41,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   // Section 3
   const [totalPrice, setTotalPrice] = useState<number | "">("");
   const [paymentStructure, setPaymentStructure] =
-    useState<PaymentStructure>("Full Upfront");
-  const [upfrontAmount, setUpfrontAmount] = useState<number | "">("");
+    useState<PaymentStructure>("Paid in Full upfront");
   const [financingDetails, setFinancingDetails] = useState("");
 
   // Section 4
@@ -64,23 +64,11 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
   const totalHours = totalHoursOverride === "" ? computedHours : Number(totalHoursOverride);
 
-  const remainingBalance = useMemo(() => {
-    if (paymentStructure !== "50% Upfront + Financed Balance") return null;
-    if (totalPrice === "" || upfrontAmount === "") return null;
-    const v = Number(totalPrice) - Number(upfrontAmount);
-    return Number.isFinite(v) ? Math.round(v * 100) / 100 : null;
-  }, [totalPrice, upfrontAmount, paymentStructure]);
-
   const amountDueAtSigning = useMemo(() => {
     if (totalPrice === "" || totalPrice === null) return 0;
-    if (paymentStructure === "Full Upfront") return Number(totalPrice);
-    if (paymentStructure === "50% Upfront + Financed Balance") {
-      return upfrontAmount === ""
-        ? Math.round((Number(totalPrice) / 2) * 100) / 100
-        : Number(upfrontAmount);
-    }
-    return 0; // Full financing — no amount due at signing here
-  }, [totalPrice, upfrontAmount, paymentStructure]);
+    if (paymentStructure === "Paid in Full upfront") return Number(totalPrice);
+    return 0;
+  }, [totalPrice, paymentStructure]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,8 +89,17 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       setError("Please complete every required field.");
       return;
     }
-    if (paymentStructure === "50% Upfront + Financed Balance" && upfrontAmount === "") {
-      setError("Enter the upfront amount for the 50/50 plan.");
+    if (
+      (paymentStructure === "Internal payment plan" ||
+        paymentStructure === "Paid In Full split payments" ||
+        paymentStructure === "Full financing") &&
+      !financingDetails.trim()
+    ) {
+      setError(
+        paymentStructure === "Internal payment plan"
+          ? "Enter the payment plan details (dates and amounts of installments)."
+          : "Enter the financing details."
+      );
       return;
     }
     if (guaranteeType === "Full Refund Guarantee" && guaranteedTargetScore === "") {
@@ -128,11 +125,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       test_date: testDate,
       total_price: Number(totalPrice),
       payment_structure: paymentStructure,
-      upfront_amount:
-        paymentStructure === "50% Upfront + Financed Balance" ? Number(upfrontAmount) : null,
-      remaining_balance: remainingBalance,
+      upfront_amount: null,
+      remaining_balance: null,
       financing_details:
-        paymentStructure === "Full Financing via Stripe" ? financingDetails : null,
+        paymentStructure === "Paid in Full upfront" ? null : financingDetails,
       amount_due_at_signing: amountDueAtSigning,
       guarantee_type: guaranteeType,
       guaranteed_target_score:
@@ -316,36 +312,34 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             value={paymentStructure}
             onChange={(e) => setPaymentStructure(e.target.value as PaymentStructure)}
           >
-            <option>Full Upfront</option>
-            <option>50% Upfront + Financed Balance</option>
-            <option>Full Financing via Stripe</option>
+            <option>Paid in Full upfront</option>
+            <option>Internal payment plan</option>
+            <option>Paid In Full split payments</option>
+            <option>Full financing</option>
           </select>
         </Field>
-        {paymentStructure === "50% Upfront + Financed Balance" && (
-          <>
-            <Field label="Upfront Amount ($)">
-              <input
-                type="number"
-                step="0.01"
-                className="input"
-                value={upfrontAmount}
-                onChange={(e) =>
-                  setUpfrontAmount(e.target.value === "" ? "" : Number(e.target.value))
-                }
-              />
-            </Field>
-            <Field label="Remaining Balance">
-              <input
-                disabled
-                className="input"
-                value={remainingBalance ?? ""}
-                placeholder="Auto-calculated"
-              />
-            </Field>
-          </>
+        {paymentStructure === "Internal payment plan" && (
+          <Field label="Payment Plan Details" full>
+            <textarea
+              className="input min-h-[80px]"
+              value={financingDetails}
+              onChange={(e) => setFinancingDetails(e.target.value)}
+              placeholder="Dates and amounts of internal installments (e.g. $2,000 on 5/1, $2,000 on 6/1, $2,000 on 7/1)."
+            />
+          </Field>
         )}
-        {paymentStructure === "Full Financing via Stripe" && (
-          <Field label="Financing Plan Details" full>
+        {paymentStructure === "Paid In Full split payments" && (
+          <Field label="Financing Details" full>
+            <textarea
+              className="input min-h-[80px]"
+              value={financingDetails}
+              onChange={(e) => setFinancingDetails(e.target.value)}
+              placeholder="e.g. $3,000 charged to credit card today; remaining $3,000 financed over 12 months."
+            />
+          </Field>
+        )}
+        {paymentStructure === "Full financing" && (
+          <Field label="Financing Details" full>
             <textarea
               className="input min-h-[80px]"
               value={financingDetails}
