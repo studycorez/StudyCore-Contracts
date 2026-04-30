@@ -102,8 +102,8 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       );
       return;
     }
-    if (guaranteeType === "Full Refund Guarantee" && guaranteedTargetScore === "") {
-      setError("Enter the guaranteed target score for the full refund guarantee.");
+    if (guaranteeType !== "No Guarantee" && guaranteedTargetScore === "") {
+      setError("Enter the guaranteed target score for the selected guarantee.");
       return;
     }
 
@@ -132,7 +132,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       amount_due_at_signing: amountDueAtSigning,
       guarantee_type: guaranteeType,
       guaranteed_target_score:
-        guaranteeType === "Full Refund Guarantee" ? Number(guaranteedTargetScore) : null,
+        guaranteeType === "No Guarantee" ? null : Number(guaranteedTargetScore),
       trial_window: trialWindow === "Yes",
       show_cancellation_refund_terms: showCancellationRefundTerms === "Yes",
     };
@@ -365,7 +365,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             <option>No Guarantee</option>
           </select>
         </Field>
-        {guaranteeType === "Full Refund Guarantee" && (
+        {guaranteeType !== "No Guarantee" && (
           <Field label="Guaranteed Target Score">
             <input
               type="number"

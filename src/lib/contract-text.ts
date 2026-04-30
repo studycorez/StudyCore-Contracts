@@ -108,7 +108,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
     clauses.push({
       heading: "6. PERFORMANCE GUARANTEE",
       paragraphs: [
-        `Score Improvement Guarantee: In the event the student does not achieve a score improvement above their diagnostic baseline score on their first official SAT after program completion, StudyCore LLC will provide up to eight (8) complimentary tutoring sessions at no additional cost, to be completed before the next available SAT test date.`,
+        `Score Improvement Guarantee: In the event the student does not achieve ${c.guaranteed_target_score} on their first official SAT after program completion, StudyCore LLC will provide up to eight (8) complimentary tutoring sessions at no additional cost, to be completed before the next available SAT test date.`,
         `This guarantee is contingent upon all of the following conditions being met:`,
       ],
       bullets: [
@@ -117,8 +117,12 @@ export function buildContractClauses(c: Contract): ContractClause[] {
         "Tutor session logs document consistent student engagement throughout the program. If a student is marked as unengaged for more than 2 consecutive sessions, StudyCore will notify the parent in writing. Continued disengagement may result in revocation of guarantee eligibility at StudyCore's discretion with written notice.",
         "Student took their first official SAT within 60 days of program completion",
         "Official College Board score report submitted to StudyCore within 14 days of receiving results",
+        `The guaranteed target score (${c.guaranteed_target_score}) is based on the diagnostic baseline score recorded at enrollment`,
       ],
     });
+    clauses[clauses.length - 1].paragraphs.push(
+      `Force Majeure: If the student is unable to take the SAT within the 60-day window due to College Board test cancellations or other events outside either party's control, the guarantee window will be extended to the next available test date.`
+    );
   } else if (c.guarantee_type === "Full Refund Guarantee") {
     clauses.push({
       heading: "6. PERFORMANCE GUARANTEE",
