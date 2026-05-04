@@ -67,6 +67,9 @@ const styles = StyleSheet.create({
   para: {
     marginBottom: 6,
   },
+  italic: {
+    fontFamily: "Helvetica-Oblique",
+  },
   bullet: {
     flexDirection: "row",
     marginBottom: 3,
@@ -141,6 +144,22 @@ const styles = StyleSheet.create({
   },
 });
 
+// Splits paragraph text on `*` markers and emits nested <Text> with
+// Helvetica-Oblique for the odd-indexed segments. Nesting Text inside
+// Text in react-pdf is the supported way to apply inline styling.
+function renderInlineItalic(text: string) {
+  const parts = text.split("*");
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <Text key={i} style={styles.italic}>
+        {part}
+      </Text>
+    ) : (
+      part
+    )
+  );
+}
+
 export default function ContractDocument({
   contract,
   signatureDataUrl,
@@ -152,6 +171,11 @@ export default function ContractDocument({
 }) {
   const clauses = buildContractClauses(contract);
   const signedDateLabel = signedAt ? formatDate(signedAt) : formatDate(new Date().toISOString());
+  // Signature section is numbered as "the next clause after the last
+  // body clause." With Free Session Guarantee inserted, the final body
+  // clause is §17 (Entire Agreement), so signatures become §18 — but
+  // we derive it from clauses.length so future inserts don't break it.
+  const signatureSectionNum = clauses.length + 1;
 
   return (
     <Document
@@ -172,7 +196,7 @@ export default function ContractDocument({
             <Text style={styles.heading}>{clause.heading}</Text>
             {clause.paragraphs.map((p, pi) => (
               <Text key={pi} style={styles.para}>
-                {p}
+                {renderInlineItalic(p)}
               </Text>
             ))}
             {clause.bullets?.map((b, bi) => (
@@ -185,7 +209,7 @@ export default function ContractDocument({
         ))}
 
         <View style={styles.signatureBlock} wrap={false}>
-          <Text style={styles.heading}>17. SIGNATURES</Text>
+          <Text style={styles.heading}>{signatureSectionNum}. SIGNATURES</Text>
           <View style={styles.sigRow}>
             <View style={styles.sigCol}>
               <Text style={styles.sigLabel}>Client (Parent / Guardian)</Text>
