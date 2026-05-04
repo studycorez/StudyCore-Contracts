@@ -24,6 +24,22 @@ function redirectErrorFor(status: string | undefined): string | null {
   return "Payment was not completed. Please try again.";
 }
 
+// Inline-italic parser. Splits paragraph text on `*` markers and wraps the
+// odd-indexed segments in <em>. Used for sub-headings inside clauses
+// (e.g. "*Eligibility.* To qualify…").
+function renderInlineItalic(text: string): React.ReactNode[] {
+  const parts = text.split("*");
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <em key={i} className="italic">
+        {part}
+      </em>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 export default async function SignPage({
   params,
   searchParams,
@@ -361,7 +377,7 @@ function ClauseBlock({
       <div className="doc-body space-y-3">
         {clause.paragraphs.map((p, i) => (
           <p key={i} className="whitespace-pre-line">
-            {p}
+            {renderInlineItalic(p)}
           </p>
         ))}
         {clause.bullets && clause.bullets.length > 0 && (
