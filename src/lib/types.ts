@@ -52,6 +52,12 @@ export interface Contract {
   guaranteed_target_score: number | null;
   trial_window: boolean;
   show_cancellation_refund_terms: boolean;
+  // Free Session Guarantee template variables. Optional with sensible
+  // defaults applied at clause-build time, so existing contracts that
+  // don't set them still render correctly.
+  attendance_threshold?: number;            // e.g. 0.90  → 90%
+  next_sat_date?: string;                   // e.g. "May 3, 2026"
+  score_report_submission_days?: number;    // e.g. 14
   status: ContractStatus;
   signed_at: string | null;
   paid_at: string | null;
