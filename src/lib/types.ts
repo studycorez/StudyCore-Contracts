@@ -33,7 +33,7 @@ export interface Contract {
   parent_email: string;
   parent_phone: string;
   student_name: string;
-  current_score: number;
+  current_score: number | null;
   target_score: number;
   program_duration: string;
   sessions_per_week: number;

@@ -16,7 +16,6 @@ export async function POST(req: Request) {
     "parent_phone",
     "agreement_date",
     "student_name",
-    "current_score",
     "target_score",
     "program_duration",
     "sessions_per_week",

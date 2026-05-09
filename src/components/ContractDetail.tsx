@@ -49,7 +49,6 @@ export default function ContractDetail({
           <Row label="Phone" value={contract.parent_phone} />
           <Row label="Agreement date" value={formatDate(contract.agreement_date)} />
           <Row label="Student" value={contract.student_name} />
-          <Row label="Baseline SAT" value={String(contract.current_score)} />
           <Row label="Target SAT" value={String(contract.target_score)} />
         </Section>
 

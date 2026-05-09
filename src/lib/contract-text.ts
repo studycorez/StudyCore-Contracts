@@ -26,7 +26,6 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       )} by and between StudyCore LLC, a California limited liability company ("StudyCore"), and ${c.parent_name} ("Client").`,
       `Client represents that they are the parent or legal guardian of the Student named below and is signing this Agreement on the Student's behalf. Client accepts full legal responsibility for all obligations under this Agreement.`,
       `Student Name: ${c.student_name}`,
-      `Baseline SAT Score (Diagnostic): ${c.current_score}`,
       `Target SAT Score: ${c.target_score}`,
       `Parent Email: ${c.parent_email}`,
       `Parent Phone: ${c.parent_phone}`,
@@ -43,7 +42,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       `Program Start Date: ${formatDate(c.start_date)}`,
       `Estimated End Date: ${formatDate(c.end_date)}`,
       `Target SAT Test Date: ${formatDate(c.test_date)}`,
-      `StudyCore will match the student with a vetted tutor (SAT score 1550+) based on learning style and diagnostic results after program commencement. The baseline SAT score used for guarantee purposes is the diagnostic score recorded above, taken on the StudyCore platform prior to program start.`,
+      `StudyCore will match the student with a vetted tutor (SAT score 1550+) based on learning style and diagnostic results after program commencement.`,
     ],
   });
 
@@ -147,7 +146,6 @@ export function buildContractClauses(c: Contract): ContractClause[] {
         "Tutor session logs document consistent student engagement throughout the program. If a student is marked as unengaged for more than 2 consecutive sessions, StudyCore will notify the parent in writing. Continued disengagement may result in revocation of guarantee eligibility at StudyCore's discretion with written notice.",
         "Student took their first official SAT within 60 days of program completion",
         "Official College Board score report submitted to StudyCore within 14 days of receiving results",
-        `The guaranteed target score (${c.guaranteed_target_score}) is based on the diagnostic baseline score recorded at enrollment`,
       ],
     });
     clauses[clauses.length - 1].paragraphs.push(

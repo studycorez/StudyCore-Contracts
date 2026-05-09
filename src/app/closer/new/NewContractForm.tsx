@@ -25,7 +25,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const [parentPhone, setParentPhone] = useState("");
   const [agreementDate, setAgreementDate] = useState(today());
   const [studentName, setStudentName] = useState("");
-  const [currentScore, setCurrentScore] = useState<number | "">("");
   const [targetScore, setTargetScore] = useState<number | "">("");
 
   // Section 2
@@ -90,7 +89,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       !parentEmail ||
       !parentPhone ||
       !studentName ||
-      currentScore === "" ||
       targetScore === "" ||
       !programDuration ||
       !startDate ||
@@ -117,7 +115,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       parent_phone: parentPhone,
       agreement_date: agreementDate,
       student_name: studentName,
-      current_score: Number(currentScore),
       target_score: Number(targetScore),
       program_duration: programDuration,
       sessions_per_week: sessionsPerWeek,
@@ -201,17 +198,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             className="input"
             value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
-          />
-        </Field>
-        <Field label="Current SAT Score (Diagnostic)">
-          <input
-            required
-            type="number"
-            className="input"
-            value={currentScore}
-            onChange={(e) =>
-              setCurrentScore(e.target.value === "" ? "" : Number(e.target.value))
-            }
           />
         </Field>
         <Field label="Target SAT Score">
