@@ -8,8 +8,7 @@ type PaymentStructure =
   | "50% Upfront + Financed Balance"
   | "Full Financing via Stripe";
 type GuaranteeType =
-  | "Score Improvement Guarantee"
-  | "Full Refund Guarantee"
+  | "We Work With You Free Until You Hit Your Score"
   | "No Guarantee";
 
 type TrackType = "standard" | "compressed" | "below_floor" | "insufficient_data";
@@ -69,9 +68,9 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const [financingDetails, setFinancingDetails] = useState("");
 
   // Section 4
-  const [guaranteeType, setGuaranteeType] =
-    useState<GuaranteeType>("Score Improvement Guarantee");
-  const [guaranteedTargetScore, setGuaranteedTargetScore] = useState<number | "">("");
+  const [guaranteeType, setGuaranteeType] = useState<GuaranteeType>(
+    "We Work With You Free Until You Hit Your Score"
+  );
 
   // Section 5
   const [trialWindow, setTrialWindow] = useState<"Yes" | "No">("Yes");
@@ -190,10 +189,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       setError("Enter the upfront amount for the 50/50 plan.");
       return;
     }
-    if (guaranteeType === "Full Refund Guarantee" && guaranteedTargetScore === "") {
-      setError("Enter the guaranteed target score for the full refund guarantee.");
-      return;
-    }
 
     setSubmitting(true);
     const payload = {
@@ -219,8 +214,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         paymentStructure === "Full Financing via Stripe" ? financingDetails : null,
       amount_due_at_signing: amountDueAtSigning,
       guarantee_type: guaranteeType,
-      guaranteed_target_score:
-        guaranteeType === "Full Refund Guarantee" ? Number(guaranteedTargetScore) : null,
       trial_window: trialWindow === "Yes",
       show_cancellation_refund_terms: showCancellationRefundTerms === "Yes",
     };
@@ -461,25 +454,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             value={guaranteeType}
             onChange={(e) => setGuaranteeType(e.target.value as GuaranteeType)}
           >
-            <option>Score Improvement Guarantee</option>
-            <option>Full Refund Guarantee</option>
+            <option>We Work With You Free Until You Hit Your Score</option>
             <option>No Guarantee</option>
           </select>
         </Field>
-        {guaranteeType === "Full Refund Guarantee" && (
-          <Field label="Guaranteed Target Score">
-            <input
-              type="number"
-              className="input"
-              value={guaranteedTargetScore}
-              onChange={(e) =>
-                setGuaranteedTargetScore(
-                  e.target.value === "" ? "" : Number(e.target.value)
-                )
-              }
-            />
-          </Field>
-        )}
       </FormSection>
 
       <FormSection title="5. Cancellation">

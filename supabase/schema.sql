@@ -54,11 +54,9 @@ create table if not exists public.contracts (
 
   -- Section 4 — Guarantee
   guarantee_type text not null check (guarantee_type in (
-    'Score Improvement Guarantee',
-    'Full Refund Guarantee',
+    'We Work With You Free Until You Hit Your Score',
     'No Guarantee'
   )),
-  guaranteed_target_score int,
 
   -- Section 5 — Cancellation
   trial_window boolean not null default false,

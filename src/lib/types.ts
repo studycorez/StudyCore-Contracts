@@ -13,8 +13,7 @@ export type PaymentStructure =
   | "Full Financing via Stripe";
 
 export type GuaranteeType =
-  | "Score Improvement Guarantee"
-  | "Full Refund Guarantee"
+  | "We Work With You Free Until You Hit Your Score"
   | "No Guarantee";
 
 export interface AppUser {
@@ -49,7 +48,6 @@ export interface Contract {
   financing_details: string | null;
   amount_due_at_signing: number;
   guarantee_type: GuaranteeType;
-  guaranteed_target_score: number | null;
   trial_window: boolean;
   show_cancellation_refund_terms: boolean;
   // Free Session Guarantee template variables. Optional with sensible

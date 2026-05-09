@@ -120,41 +120,24 @@ export function buildContractClauses(c: Contract): ContractClause[] {
     paragraphs: cancellationParagraphs,
   });
 
-  if (c.guarantee_type === "Score Improvement Guarantee") {
+  if (c.guarantee_type === "We Work With You Free Until You Hit Your Score") {
     clauses.push({
-      heading: "6. PERFORMANCE GUARANTEE",
+      heading:
+        "6. PERFORMANCE GUARANTEE — WE WORK WITH YOU FREE UNTIL YOU HIT YOUR SCORE",
       paragraphs: [
-        `Score Improvement Guarantee: In the event the student does not achieve a score improvement above their verified diagnostic baseline score on their first official SAT after program completion, StudyCore LLC will provide unlimited complimentary access to group SAT preparation sessions until the student achieves their target score or the next available SAT test date, whichever comes first.`,
+        `If the student does not achieve their target score on their first official SAT after program completion, StudyCore LLC will continue working with the student at no additional cost — providing unlimited access to group SAT preparation sessions including Strategy Workshops, Practice Test Review sessions, and Office Hours / Q&A — until the student achieves their target score or the next available SAT test date, whichever comes first.`,
         `This guarantee is contingent upon all of the following conditions being met:`,
       ],
       bullets: [
+        "Student has a verified baseline score established by the session 1 diagnostic administered and proctored by their assigned tutor. The guarantee does not activate without a verified baseline.",
         "Student attended at least 90% of scheduled 1-on-1 sessions",
         "Student completed 100% of assigned homework, practice tests, and drill sets",
-        "Student has a verified baseline score established by the session 1 diagnostic administered and proctored by their assigned tutor. The guarantee does not activate without a verified baseline.",
         "Tutor session logs document consistent student engagement throughout the program. If a student is marked as unengaged for more than 2 consecutive sessions, StudyCore will notify the parent in writing. Continued disengagement may result in revocation of guarantee eligibility at StudyCore's discretion with written notice.",
         "Student took their first official SAT within 60 days of program completion",
         "Official College Board score report submitted to StudyCore within 14 days of receiving results",
+        "Continued support is delivered through group sessions conducted at times scheduled by StudyCore. Group sessions are not convertible to 1-on-1 tutoring, refunds, account credit, or cash equivalent.",
       ],
     });
-  } else if (c.guarantee_type === "Full Refund Guarantee") {
-    clauses.push({
-      heading: "6. PERFORMANCE GUARANTEE",
-      paragraphs: [
-        `Full Refund Guarantee: In the event the student does not achieve ${c.guaranteed_target_score} on their first official SAT after program completion, Client will receive a full refund of the total program investment.`,
-        `This guarantee is contingent upon all of the following conditions being met:`,
-      ],
-      bullets: [
-        "Student attended at least 90% of scheduled sessions",
-        "Student has a verified baseline score established by the session 1 diagnostic administered and proctored by their assigned tutor. The guarantee does not activate without a verified baseline.",
-        "Student completed 100% of assigned homework, practice tests, and drill sets",
-        "Tutor session logs document consistent student engagement throughout the program. If a student is marked as unengaged for more than 2 consecutive sessions, StudyCore will notify the parent in writing. Continued disengagement may result in revocation of guarantee eligibility at StudyCore's discretion with written notice.",
-        "Student took their first official SAT within 60 days of program completion",
-        "Official College Board score report submitted to StudyCore within 14 days of receiving results",
-      ],
-    });
-    clauses[clauses.length - 1].paragraphs.push(
-      `Force Majeure: If the student is unable to take the SAT within the 60-day window due to College Board test cancellations or other events outside either party's control, the guarantee window will be extended to the next available test date.`
-    );
   } else {
     clauses.push({
       heading: "6. PERFORMANCE GUARANTEE",

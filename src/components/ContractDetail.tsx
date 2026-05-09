@@ -79,12 +79,6 @@ export default function ContractDetail({
 
         <Section title="Guarantee & Cancellation">
           <Row label="Guarantee" value={contract.guarantee_type} />
-          {contract.guaranteed_target_score != null && (
-            <Row
-              label="Guaranteed target"
-              value={String(contract.guaranteed_target_score)}
-            />
-          )}
           <Row label="3-session trial window" value={contract.trial_window ? "Yes" : "No"} />
           <Row
             label="Cancellation refund terms"
