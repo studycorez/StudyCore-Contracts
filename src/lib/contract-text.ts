@@ -42,7 +42,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       `Program Start Date: ${formatDate(c.start_date)}`,
       `Estimated End Date: ${formatDate(c.end_date)}`,
       `Target SAT Test Date: ${formatDate(c.test_date)}`,
-      `StudyCore will match the student with a vetted tutor (SAT score 1550+) based on learning style and diagnostic results after program commencement.`,
+      `StudyCore will match the student with a vetted tutor (SAT score 1550+) based on diagnostic results after program commencement. The session 1 diagnostic is administered and proctored live by the assigned tutor and serves as the verified baseline score for all guarantee purposes. The guarantee does not activate until this diagnostic is completed.`,
     ],
   });
 
@@ -51,7 +51,9 @@ export function buildContractClauses(c: Contract): ContractClause[] {
     paragraphs: [],
     bullets: [
       "1-on-1 tutoring sessions with a matched, vetted tutor (SAT score 1550+)",
-      "Full-length, proctored practice tests throughout the program",
+      "Session 1 diagnostic assessment, administered and proctored live by the assigned tutor to establish a verified baseline score",
+      "Access to group SAT preparation sessions at no additional cost, included throughout the program. Group session types include: Strategy Workshops (pacing, process of elimination, Desmos usage, test-taking meta-skills), Practice Test Review (tutor-led review of recent practice tests), and Office Hours / Q&A (open format for homework questions)",
+      "Full-length practice tests completed independently by the student at scheduled program checkpoints",
       "Proprietary study materials, strategy guides, and drill sets via the StudyCore platform",
       "AI-powered performance analytics after each practice test",
       "Regular parent progress updates on session attendance, test scores, and improvement",
@@ -122,12 +124,13 @@ export function buildContractClauses(c: Contract): ContractClause[] {
     clauses.push({
       heading: "6. PERFORMANCE GUARANTEE",
       paragraphs: [
-        `Score Improvement Guarantee: In the event the student does not achieve a score improvement above their diagnostic baseline score on their first official SAT after program completion, StudyCore LLC will provide up to eight (8) complimentary tutoring sessions at no additional cost, to be completed before the next available SAT test date.`,
+        `Score Improvement Guarantee: In the event the student does not achieve a score improvement above their verified diagnostic baseline score on their first official SAT after program completion, StudyCore LLC will provide unlimited complimentary access to group SAT preparation sessions until the student achieves their target score or the next available SAT test date, whichever comes first.`,
         `This guarantee is contingent upon all of the following conditions being met:`,
       ],
       bullets: [
-        "Student attended at least 90% of scheduled sessions",
+        "Student attended at least 90% of scheduled 1-on-1 sessions",
         "Student completed 100% of assigned homework, practice tests, and drill sets",
+        "Student has a verified baseline score established by the session 1 diagnostic administered and proctored by their assigned tutor. The guarantee does not activate without a verified baseline.",
         "Tutor session logs document consistent student engagement throughout the program. If a student is marked as unengaged for more than 2 consecutive sessions, StudyCore will notify the parent in writing. Continued disengagement may result in revocation of guarantee eligibility at StudyCore's discretion with written notice.",
         "Student took their first official SAT within 60 days of program completion",
         "Official College Board score report submitted to StudyCore within 14 days of receiving results",
@@ -142,6 +145,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       ],
       bullets: [
         "Student attended at least 90% of scheduled sessions",
+        "Student has a verified baseline score established by the session 1 diagnostic administered and proctored by their assigned tutor. The guarantee does not activate without a verified baseline.",
         "Student completed 100% of assigned homework, practice tests, and drill sets",
         "Tutor session logs document consistent student engagement throughout the program. If a student is marked as unengaged for more than 2 consecutive sessions, StudyCore will notify the parent in writing. Continued disengagement may result in revocation of guarantee eligibility at StudyCore's discretion with written notice.",
         "Student took their first official SAT within 60 days of program completion",
@@ -182,8 +186,8 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       `Free Session Guarantee. If Student does not achieve the Target Score of ${c.target_score} on the official SAT examination administered on ${formatDate(
         c.test_date
       )} (the "Target Test"), StudyCore will provide Student with complimentary access to group SAT preparation sessions, subject to the conditions below.`,
-      `*Eligibility.* To qualify, Student must have (a) attended at least ${attendancePct}% of scheduled 1:1 tutoring sessions during the original engagement, (b) completed all assigned homework and practice materials in good faith, and (c) sat for the Target Test and submitted the official College Board score report to StudyCore within ${reportDays} days of its release.`,
-      `*Scope and duration.* Complimentary group sessions will be provided until the earlier of (i) ${nextSatPhrase}, or (ii) the date Student achieves the Target Score on a subsequent official or full-length proctored practice SAT. Group sessions are conducted with multiple students per session at times scheduled by StudyCore and are not convertible to 1:1 tutoring, refunds, account credit, or cash equivalent.`,
+      `*Eligibility.* To qualify, Student must have (a) attended at least ${attendancePct}% of scheduled 1:1 tutoring sessions during the original engagement, (b) completed all assigned homework and practice materials in good faith, and (c) sat for the Target Test and submitted the official College Board score report to StudyCore within ${reportDays} days of its release. The guarantee does not activate for students who do not have a verified baseline score established by the session 1 diagnostic.`,
+      `*Scope and duration.* Complimentary group sessions — including Strategy Workshops, Practice Test Review sessions, and Office Hours / Q&A — will be provided until the earlier of (i) ${nextSatPhrase}, or (ii) the date Student achieves the Target Score on a subsequent official or full-length proctored practice SAT. Group sessions are conducted with multiple students per session at times scheduled by StudyCore and are not convertible to 1:1 tutoring, refunds, account credit, or cash equivalent.`,
       `*Forfeiture.* The guarantee terminates automatically if Student fails to register for or sit for the next official SAT, withdraws from the program, or materially breaches this Agreement.`,
     ],
   });
@@ -195,6 +199,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       "Attend all scheduled sessions or provide at least 24 hours notice to reschedule",
       "Student may reschedule up to a maximum of 2 times per calendar month with at least 24 hours notice. Additional reschedules beyond this limit will result in the session being forfeited and counted as completed for guarantee eligibility purposes.",
       "Complete 100% of assigned practice tests, drills, and homework between sessions",
+      "Complete all assigned practice tests independently outside of sessions, under timed conditions. Practice tests are never administered during live session time except for the session 1 diagnostic.",
       "Maintain active engagement during all sessions as documented by the assigned tutor",
       "Communicate promptly with their tutor and the StudyCore team",
       "Ensure Student has reliable internet and a device for online sessions",
