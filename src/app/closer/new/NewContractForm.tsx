@@ -12,7 +12,35 @@ type GuaranteeType =
   | "Full Refund Guarantee"
   | "No Guarantee";
 
+type TrackType = "standard" | "compressed" | "below_floor" | "insufficient_data";
+
 const today = () => new Date().toISOString().slice(0, 10);
+
+function getStandardMonths(gap: number, currentScore: number): number {
+  if (gap <= 100) return currentScore >= 1400 ? 2 : 1;
+  if (gap <= 200) return 3;
+  if (gap <= 250) return 4;
+  if (gap <= 300) return 5;
+  if (gap <= 350) return 5;
+  return 6; // 351–400
+}
+
+function getFloorWeeks(gap: number, currentScore: number): number {
+  if (gap <= 100) return currentScore >= 1400 ? 6 : 4;
+  if (gap <= 200) return 10;
+  if (gap <= 300) return 14;
+  return 18; // 301–400
+}
+
+function getAvailableWeeks(start: string, test: string): number {
+  if (!start || !test) return 0;
+  const s = new Date(start);
+  const t = new Date(test);
+  if (isNaN(s.getTime()) || isNaN(t.getTime())) return 0;
+  const ms = t.getTime() - s.getTime();
+  if (ms <= 0) return 0;
+  return Math.floor(ms / (7 * 24 * 60 * 60 * 1000));
+}
 
 export default function NewContractForm({ closerName }: { closerName: string }) {
   const router = useRouter();
@@ -25,13 +53,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const [parentPhone, setParentPhone] = useState("");
   const [agreementDate, setAgreementDate] = useState(today());
   const [studentName, setStudentName] = useState("");
+  const [currentScore, setCurrentScore] = useState<number | "">("");
   const [targetScore, setTargetScore] = useState<number | "">("");
 
   // Section 2
-  const [programDuration, setProgramDuration] = useState("10 weeks");
-  const [sessionsPerWeek, setSessionsPerWeek] = useState<number>(2);
-  const [sessionLength, setSessionLength] = useState<number>(1.5);
-  const [totalHoursOverride, setTotalHoursOverride] = useState<string>("");
   const [startDate, setStartDate] = useState(today());
   const [endDate, setEndDate] = useState("");
   const [testDate, setTestDate] = useState("");
@@ -53,15 +78,67 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const [showCancellationRefundTerms, setShowCancellationRefundTerms] =
     useState<"Yes" | "No">("Yes");
 
-  const weeksMatch = programDuration.match(/([\d.]+)/);
-  const weeks = weeksMatch ? Number(weeksMatch[1]) : 0;
+  const pointGap =
+    typeof targetScore === "number" && typeof currentScore === "number"
+      ? targetScore - currentScore
+      : null;
 
-  const computedHours = useMemo(() => {
-    const auto = weeks * sessionsPerWeek * sessionLength;
-    return Number.isFinite(auto) ? Math.round(auto * 10) / 10 : 0;
-  }, [weeks, sessionsPerWeek, sessionLength]);
+  const program = useMemo(() => {
+    if (
+      pointGap === null ||
+      typeof currentScore !== "number" ||
+      !startDate ||
+      !testDate
+    ) {
+      return {
+        trackType: "insufficient_data" as TrackType,
+        standardMonths: 0,
+        floorWeeks: 0,
+        availableWeeks: 0,
+        sessionsPerWeek: 0,
+        totalHours: 0,
+        programDuration: "",
+      };
+    }
+    const standardMonths = getStandardMonths(pointGap, currentScore);
+    const floorWeeks = getFloorWeeks(pointGap, currentScore);
+    const availableWeeks = getAvailableWeeks(startDate, testDate);
+    if (availableWeeks < floorWeeks) {
+      return {
+        trackType: "below_floor" as TrackType,
+        standardMonths,
+        floorWeeks,
+        availableWeeks,
+        sessionsPerWeek: 0,
+        totalHours: 0,
+        programDuration: "",
+      };
+    }
+    if (availableWeeks >= standardMonths * 4) {
+      return {
+        trackType: "standard" as TrackType,
+        standardMonths,
+        floorWeeks,
+        availableWeeks,
+        sessionsPerWeek: 2,
+        totalHours: standardMonths * 8,
+        programDuration: `${standardMonths} months (${standardMonths * 4} weeks)`,
+      };
+    }
+    return {
+      trackType: "compressed" as TrackType,
+      standardMonths,
+      floorWeeks,
+      availableWeeks,
+      sessionsPerWeek: 3,
+      totalHours: standardMonths * 8,
+      programDuration: `${standardMonths} months compressed into ${availableWeeks} weeks (3 sessions/week)`,
+    };
+  }, [pointGap, currentScore, startDate, testDate]);
 
-  const totalHours = totalHoursOverride === "" ? computedHours : Number(totalHoursOverride);
+  const computedProgramDuration = program.programDuration;
+  const computedSessionsPerWeek = program.sessionsPerWeek;
+  const computedTotalHours = program.totalHours;
 
   const remainingBalance = useMemo(() => {
     if (paymentStructure !== "50% Upfront + Financed Balance") return null;
@@ -81,6 +158,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
     return 0; // Full financing — no amount due at signing here
   }, [totalPrice, upfrontAmount, paymentStructure]);
 
+  const submitBlocked =
+    program.trackType === "below_floor" ||
+    program.trackType === "insufficient_data";
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -89,14 +170,20 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       !parentEmail ||
       !parentPhone ||
       !studentName ||
+      currentScore === "" ||
       targetScore === "" ||
-      !programDuration ||
       !startDate ||
       !endDate ||
       !testDate ||
       totalPrice === ""
     ) {
       setError("Please complete every required field.");
+      return;
+    }
+    if (submitBlocked) {
+      setError(
+        "Program structure cannot be calculated for this student. Resolve the program section before submitting."
+      );
       return;
     }
     if (paymentStructure === "50% Upfront + Financed Balance" && upfrontAmount === "") {
@@ -116,10 +203,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       agreement_date: agreementDate,
       student_name: studentName,
       target_score: Number(targetScore),
-      program_duration: programDuration,
-      sessions_per_week: sessionsPerWeek,
-      session_length: sessionLength,
-      total_hours: totalHours,
+      program_duration: computedProgramDuration,
+      sessions_per_week: computedSessionsPerWeek,
+      session_length: 1,
+      total_hours: computedTotalHours,
       start_date: startDate,
       end_date: endDate,
       test_date: testDate,
@@ -200,6 +287,17 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             onChange={(e) => setStudentName(e.target.value)}
           />
         </Field>
+        <Field label="Current SAT Score (Diagnostic)">
+          <input
+            required
+            type="number"
+            className="input"
+            value={currentScore}
+            onChange={(e) =>
+              setCurrentScore(e.target.value === "" ? "" : Number(e.target.value))
+            }
+          />
+        </Field>
         <Field label="Target SAT Score">
           <input
             required
@@ -213,47 +311,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         </Field>
       </FormSection>
 
-      <FormSection title="2. Program" subtitle="Schedule and duration.">
-        <Field label="Program Duration (e.g. '10 weeks')">
-          <input
-            required
-            className="input"
-            value={programDuration}
-            onChange={(e) => setProgramDuration(e.target.value)}
-          />
-        </Field>
-        <Field label="Sessions Per Week">
-          <select
-            className="input"
-            value={sessionsPerWeek}
-            onChange={(e) => setSessionsPerWeek(Number(e.target.value))}
-          >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-          </select>
-        </Field>
-        <Field label="Session Length">
-          <select
-            className="input"
-            value={sessionLength}
-            onChange={(e) => setSessionLength(Number(e.target.value))}
-          >
-            <option value={1}>1 hr</option>
-            <option value={1.5}>1.5 hrs</option>
-            <option value={2}>2 hrs</option>
-          </select>
-        </Field>
-        <Field label={`Total Program Hours (auto: ${computedHours})`}>
-          <input
-            type="number"
-            step="0.5"
-            placeholder={String(computedHours)}
-            className="input"
-            value={totalHoursOverride}
-            onChange={(e) => setTotalHoursOverride(e.target.value)}
-          />
-        </Field>
+      <FormSection
+        title="2. Program"
+        subtitle="Schedule and auto-calculated program structure."
+      >
         <Field label="Program Start Date">
           <input
             required
@@ -281,6 +342,54 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             onChange={(e) => setTestDate(e.target.value)}
           />
         </Field>
+
+        <div className="md:col-span-2">
+          {program.trackType === "insufficient_data" && (
+            <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">
+              Enter the student&apos;s current score, target score, start date, and
+              test date to calculate the program structure.
+            </div>
+          )}
+
+          {program.trackType === "below_floor" && (
+            <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <div className="font-semibold">
+                ⚠️ This student does not meet the minimum timeline for a full program.
+              </div>
+              <p className="mt-1">
+                The test date is too close for the required minimum of{" "}
+                {program.floorWeeks} weeks. You may only offer the Targeted Intensive
+                option — not a full program. Do not proceed with a full contract for
+                this student.
+              </p>
+            </div>
+          )}
+
+          {(program.trackType === "standard" ||
+            program.trackType === "compressed") && (
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Computed program structure
+              </div>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-slate-700">
+                <dt className="text-slate-500">Point Gap</dt>
+                <dd className="font-medium">{pointGap}</dd>
+                <dt className="text-slate-500">Track</dt>
+                <dd className="font-medium">
+                  {program.trackType === "standard" ? "Standard" : "Compressed"}
+                </dd>
+                <dt className="text-slate-500">Program Duration</dt>
+                <dd className="font-medium">{computedProgramDuration}</dd>
+                <dt className="text-slate-500">Sessions Per Week</dt>
+                <dd className="font-medium">{computedSessionsPerWeek}</dd>
+                <dt className="text-slate-500">Session Length</dt>
+                <dd className="font-medium">1 hour</dd>
+                <dt className="text-slate-500">Total Program Hours</dt>
+                <dd className="font-medium">{computedTotalHours}</dd>
+              </dl>
+            </div>
+          )}
+        </div>
       </FormSection>
 
       <FormSection title="3. Payment" subtitle="Total investment and how it's collected.">
@@ -386,9 +495,11 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         </Field>
         <Field
           label={
-            showCancellationRefundTerms === "Yes" && totalPrice !== "" && totalHours > 0
+            showCancellationRefundTerms === "Yes" &&
+            totalPrice !== "" &&
+            computedTotalHours > 0
               ? `Show Cancellation Refund Terms (rate: $${(
-                  Number(totalPrice) / totalHours
+                  Number(totalPrice) / computedTotalHours
                 ).toFixed(2)} / hr)`
               : "Show Cancellation Refund Terms"
           }
@@ -419,7 +530,11 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         >
           Cancel
         </button>
-        <button type="submit" className="btn-primary" disabled={submitting}>
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={submitting || submitBlocked}
+        >
           {submitting ? "Sending…" : "Generate & email contract"}
         </button>
       </div>
