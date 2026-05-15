@@ -26,6 +26,9 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       )} by and between StudyCore LLC, a California limited liability company ("StudyCore"), and ${c.parent_name} ("Client").`,
       `Client represents that they are the parent or legal guardian of the Student named below and is signing this Agreement on the Student's behalf. Client accepts full legal responsibility for all obligations under this Agreement.`,
       `Student Name: ${c.student_name}`,
+      ...(typeof c.current_score === "number"
+        ? [`Starting SAT Score: ${c.current_score} (verified at session 1 diagnostic)`]
+        : [`Starting SAT Score: To be established at session 1 diagnostic`]),
       `Target SAT Score: ${c.target_score}`,
       `Parent Email: ${c.parent_email}`,
       `Parent Phone: ${c.parent_phone}`,

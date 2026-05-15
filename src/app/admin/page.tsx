@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import DashboardShell from "@/components/DashboardShell";
 import StatusBadge from "@/components/StatusBadge";
+import DeliveryCell from "@/components/DeliveryCell";
 import { formatDate, formatMoney } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export default async function AdminDashboard() {
   const { data: contracts } = await supabase
     .from("contracts")
     .select(
-      "id, parent_name, student_name, status, total_price, amount_due_at_signing, created_at, closer_id"
+      "id, parent_name, student_name, status, total_price, amount_due_at_signing, created_at, closer_id, send_option, contract_sent_at, payment_link_sent_at"
     )
     .order("created_at", { ascending: false });
 
@@ -72,7 +73,8 @@ export default async function AdminDashboard() {
               <th className="px-4 py-3">Parent</th>
               <th className="px-4 py-3">Student</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Sent</th>
+              <th className="px-4 py-3">Delivery</th>
+              <th className="px-4 py-3">Created</th>
               <th className="px-4 py-3">Amount</th>
               <th className="px-4 py-3" />
             </tr>
@@ -88,6 +90,13 @@ export default async function AdminDashboard() {
                 <td className="px-4 py-3">
                   <StatusBadge status={c.status as any} />
                 </td>
+                <td className="px-4 py-3">
+                  <DeliveryCell
+                    sendOption={(c.send_option as any) ?? "both"}
+                    contractSentAt={c.contract_sent_at as string | null}
+                    paymentLinkSentAt={c.payment_link_sent_at as string | null}
+                  />
+                </td>
                 <td className="px-4 py-3 text-slate-500">{formatDate(c.created_at)}</td>
                 <td className="px-4 py-3 font-semibold text-slate-900">
                   {formatMoney(c.total_price)}
@@ -101,7 +110,7 @@ export default async function AdminDashboard() {
             ))}
             {(!contracts || contracts.length === 0) && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
                   No contracts yet.
                 </td>
               </tr>
