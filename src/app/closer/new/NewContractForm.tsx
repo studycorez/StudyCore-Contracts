@@ -65,9 +65,11 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   // Section 2
   const [testDate, setTestDate] = useState("");
   // Manual program-structure inputs used when current SAT score is missing
-  // (so the auto-calculator can't run). Closers can enter these directly.
-  const [manualMonths, setManualMonths] = useState<number | "">("");
-  const [manualSessionsPerWeek, setManualSessionsPerWeek] = useState<2 | 3>(2);
+  // (so the auto-calculator can't run). Closer fills every field explicitly.
+  const [manualWeeks, setManualWeeks] = useState<number | "">("");
+  const [manualSessionsPerWeek, setManualSessionsPerWeek] = useState<1 | 2 | 3 | "">("");
+  const [manualSessionLength, setManualSessionLength] = useState<1 | 1.5 | 2 | "">("");
+  const [manualTotalHours, setManualTotalHours] = useState<number | "">("");
 
   // Section 3
   const [totalPrice, setTotalPrice] = useState<number | "">("");
@@ -98,8 +100,12 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
   const program = useMemo(() => {
     if (manualMode) {
-      // No diagnostic score → closer picks duration / sessions per week manually.
-      if (typeof manualMonths !== "number" || manualMonths <= 0 || !testDate) {
+      // No diagnostic score → closer fills every program field by hand.
+      const weeksOk = typeof manualWeeks === "number" && manualWeeks > 0;
+      const sessionsOk = typeof manualSessionsPerWeek === "number";
+      const lengthOk = typeof manualSessionLength === "number";
+      const hoursOk = typeof manualTotalHours === "number" && manualTotalHours > 0;
+      if (!weeksOk || !sessionsOk || !lengthOk || !hoursOk || !testDate) {
         return {
           trackType: "manual_incomplete" as TrackType,
           standardMonths: 0,
@@ -110,18 +116,14 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
           programDuration: "",
         };
       }
-      const weeks = manualMonths * 4;
       return {
         trackType: "manual" as TrackType,
-        standardMonths: manualMonths,
+        standardMonths: 0,
         floorWeeks: 0,
         availableWeeks: getAvailableWeeks(agreementDate, testDate),
         sessionsPerWeek: manualSessionsPerWeek,
-        totalHours: manualMonths * 8,
-        programDuration:
-          manualSessionsPerWeek === 3
-            ? `${manualMonths} months compressed into ${weeks} weeks (3 sessions/week)`
-            : `${manualMonths} months (${weeks} weeks)`,
+        totalHours: manualTotalHours,
+        programDuration: `${manualWeeks} week${manualWeeks === 1 ? "" : "s"}`,
       };
     }
     if (
@@ -176,8 +178,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
     };
   }, [
     manualMode,
-    manualMonths,
+    manualWeeks,
     manualSessionsPerWeek,
+    manualSessionLength,
+    manualTotalHours,
     pointGap,
     currentScore,
     agreementDate,
@@ -257,7 +261,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       target_score: Number(targetScore),
       program_duration: computedProgramDuration,
       sessions_per_week: computedSessionsPerWeek,
-      session_length: 1,
+      session_length:
+        manualMode && typeof manualSessionLength === "number"
+          ? manualSessionLength
+          : 1,
       total_hours: computedTotalHours,
       test_date: testDate,
       total_price: Number(totalPrice),
@@ -376,16 +383,15 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
         {manualMode && (
           <>
-            <Field label="Program Duration (months)">
+            <Field label="Program Duration (weeks)">
               <input
                 type="number"
                 min={1}
-                max={12}
                 className="input"
-                value={manualMonths}
-                placeholder="e.g. 3"
+                value={manualWeeks}
+                placeholder="e.g. 12"
                 onChange={(e) =>
-                  setManualMonths(e.target.value === "" ? "" : Number(e.target.value))
+                  setManualWeeks(e.target.value === "" ? "" : Number(e.target.value))
                 }
               />
             </Field>
@@ -393,13 +399,46 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
               <select
                 className="input"
                 value={manualSessionsPerWeek}
-                onChange={(e) =>
-                  setManualSessionsPerWeek(Number(e.target.value) === 3 ? 3 : 2)
-                }
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setManualSessionsPerWeek(v === "" ? "" : (Number(v) as 1 | 2 | 3));
+                }}
               >
-                <option value={2}>2 (standard pace)</option>
-                <option value={3}>3 (compressed)</option>
+                <option value="">Select…</option>
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
               </select>
+            </Field>
+            <Field label="Session Length (hours)">
+              <select
+                className="input"
+                value={manualSessionLength}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setManualSessionLength(v === "" ? "" : (Number(v) as 1 | 1.5 | 2));
+                }}
+              >
+                <option value="">Select…</option>
+                <option value={1}>1</option>
+                <option value={1.5}>1.5</option>
+                <option value={2}>2</option>
+              </select>
+            </Field>
+            <Field label="Total Program Hours">
+              <input
+                type="number"
+                step="0.5"
+                min={1}
+                className="input"
+                value={manualTotalHours}
+                placeholder="e.g. 24"
+                onChange={(e) =>
+                  setManualTotalHours(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+              />
             </Field>
           </>
         )}
@@ -413,8 +452,9 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
           )}
           {program.trackType === "manual_incomplete" && (
             <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">
-              No diagnostic score yet — enter the program duration, sessions per
-              week, and target SAT test date manually.
+              No diagnostic score — fill in every program field above
+              (duration, sessions per week, session length, total hours) and
+              the target SAT test date.
             </div>
           )}
 
@@ -433,28 +473,17 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
           )}
 
           {(program.trackType === "standard" ||
-            program.trackType === "compressed" ||
-            program.trackType === "manual") && (
+            program.trackType === "compressed") && (
             <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                {program.trackType === "manual"
-                  ? "Manual program structure"
-                  : "Computed program structure"}
+                Computed program structure
               </div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-slate-700">
-                {program.trackType !== "manual" && (
-                  <>
-                    <dt className="text-slate-500">Point Gap</dt>
-                    <dd className="font-medium">{pointGap}</dd>
-                  </>
-                )}
+                <dt className="text-slate-500">Point Gap</dt>
+                <dd className="font-medium">{pointGap}</dd>
                 <dt className="text-slate-500">Track</dt>
                 <dd className="font-medium">
-                  {program.trackType === "standard"
-                    ? "Standard"
-                    : program.trackType === "compressed"
-                    ? "Compressed"
-                    : "Manual"}
+                  {program.trackType === "standard" ? "Standard" : "Compressed"}
                 </dd>
                 <dt className="text-slate-500">Program Duration</dt>
                 <dd className="font-medium">{computedProgramDuration}</dd>
