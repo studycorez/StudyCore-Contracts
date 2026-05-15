@@ -57,8 +57,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const [targetScore, setTargetScore] = useState<number | "">("");
 
   // Section 2
-  const [startDate, setStartDate] = useState(today());
-  const [endDate, setEndDate] = useState("");
   const [testDate, setTestDate] = useState("");
 
   // Section 3
@@ -90,7 +88,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
     if (
       pointGap === null ||
       typeof currentScore !== "number" ||
-      !startDate ||
+      !agreementDate ||
       !testDate
     ) {
       return {
@@ -105,7 +103,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
     }
     const standardMonths = getStandardMonths(pointGap, currentScore);
     const floorWeeks = getFloorWeeks(pointGap, currentScore);
-    const availableWeeks = getAvailableWeeks(startDate, testDate);
+    const availableWeeks = getAvailableWeeks(agreementDate, testDate);
     if (availableWeeks < floorWeeks) {
       return {
         trackType: "below_floor" as TrackType,
@@ -137,7 +135,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       totalHours: standardMonths * 8,
       programDuration: `${standardMonths} months compressed into ${availableWeeks} weeks (3 sessions/week)`,
     };
-  }, [pointGap, currentScore, startDate, testDate]);
+  }, [pointGap, currentScore, agreementDate, testDate]);
 
   const computedProgramDuration = program.programDuration;
   const computedSessionsPerWeek = program.sessionsPerWeek;
@@ -175,8 +173,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       !studentName ||
       currentScore === "" ||
       targetScore === "" ||
-      !startDate ||
-      !endDate ||
       !testDate ||
       totalPrice === ""
     ) {
@@ -215,8 +211,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       sessions_per_week: computedSessionsPerWeek,
       session_length: 1,
       total_hours: computedTotalHours,
-      start_date: startDate,
-      end_date: endDate,
       test_date: testDate,
       total_price: Number(totalPrice),
       payment_structure: paymentStructure,
@@ -320,26 +314,8 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
       <FormSection
         title="2. Program"
-        subtitle="Schedule and auto-calculated program structure."
+        subtitle="Target SAT date drives program structure and guarantees."
       >
-        <Field label="Program Start Date">
-          <input
-            required
-            type="date"
-            className="input"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </Field>
-        <Field label="Estimated End Date">
-          <input
-            required
-            type="date"
-            className="input"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </Field>
         <Field label="Target SAT Test Date">
           <input
             required
@@ -353,8 +329,8 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         <div className="md:col-span-2">
           {program.trackType === "insufficient_data" && (
             <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">
-              Enter the student&apos;s current score, target score, start date, and
-              test date to calculate the program structure.
+              Enter the student&apos;s current score, target score, and target
+              SAT test date to calculate the program structure.
             </div>
           )}
 

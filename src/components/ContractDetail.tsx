@@ -161,8 +161,6 @@ export default function ContractDetail({
           <Row label="Sessions / week" value={String(contract.sessions_per_week)} />
           <Row label="Session length" value={`${contract.session_length} hr`} />
           <Row label="Total hours" value={String(contract.total_hours)} />
-          <Row label="Start" value={formatDate(contract.start_date)} />
-          <Row label="Estimated end" value={formatDate(contract.end_date)} />
           <Row label="Target test date" value={formatDate(contract.test_date)} />
         </Section>
 

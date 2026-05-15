@@ -36,8 +36,6 @@ create table if not exists public.contracts (
   sessions_per_week int not null check (sessions_per_week in (1, 2, 3)),
   session_length numeric(3,1) not null check (session_length in (1, 1.5, 2)),
   total_hours numeric(6,2) not null,
-  start_date date not null,
-  end_date date not null,
   test_date date not null,
 
   -- Section 3 — Payment

@@ -40,8 +40,6 @@ export interface Contract {
   sessions_per_week: number;
   session_length: number;
   total_hours: number;
-  start_date: string;
-  end_date: string;
   test_date: string;
   total_price: number;
   payment_structure: PaymentStructure;

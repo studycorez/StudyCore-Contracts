@@ -29,8 +29,6 @@ export async function POST(req: Request) {
     "sessions_per_week",
     "session_length",
     "total_hours",
-    "start_date",
-    "end_date",
     "test_date",
     "total_price",
     "payment_structure",
