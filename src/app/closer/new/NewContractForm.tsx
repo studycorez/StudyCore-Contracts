@@ -12,7 +12,13 @@ type GuaranteeType =
   | "No Guarantee";
 type SendOption = "contract_only" | "payment_only" | "both";
 
-type TrackType = "standard" | "compressed" | "below_floor" | "insufficient_data";
+type TrackType =
+  | "standard"
+  | "compressed"
+  | "below_floor"
+  | "insufficient_data"
+  | "manual"
+  | "manual_incomplete";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -58,6 +64,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
   // Section 2
   const [testDate, setTestDate] = useState("");
+  // Manual program-structure inputs used when current SAT score is missing
+  // (so the auto-calculator can't run). Closers can enter these directly.
+  const [manualMonths, setManualMonths] = useState<number | "">("");
+  const [manualSessionsPerWeek, setManualSessionsPerWeek] = useState<2 | 3>(2);
 
   // Section 3
   const [totalPrice, setTotalPrice] = useState<number | "">("");
@@ -84,7 +94,36 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       ? targetScore - currentScore
       : null;
 
+  const manualMode = typeof currentScore !== "number";
+
   const program = useMemo(() => {
+    if (manualMode) {
+      // No diagnostic score → closer picks duration / sessions per week manually.
+      if (typeof manualMonths !== "number" || manualMonths <= 0 || !testDate) {
+        return {
+          trackType: "manual_incomplete" as TrackType,
+          standardMonths: 0,
+          floorWeeks: 0,
+          availableWeeks: 0,
+          sessionsPerWeek: 0,
+          totalHours: 0,
+          programDuration: "",
+        };
+      }
+      const weeks = manualMonths * 4;
+      return {
+        trackType: "manual" as TrackType,
+        standardMonths: manualMonths,
+        floorWeeks: 0,
+        availableWeeks: getAvailableWeeks(agreementDate, testDate),
+        sessionsPerWeek: manualSessionsPerWeek,
+        totalHours: manualMonths * 8,
+        programDuration:
+          manualSessionsPerWeek === 3
+            ? `${manualMonths} months compressed into ${weeks} weeks (3 sessions/week)`
+            : `${manualMonths} months (${weeks} weeks)`,
+      };
+    }
     if (
       pointGap === null ||
       typeof currentScore !== "number" ||
@@ -135,7 +174,15 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       totalHours: standardMonths * 8,
       programDuration: `${standardMonths} months compressed into ${availableWeeks} weeks (3 sessions/week)`,
     };
-  }, [pointGap, currentScore, agreementDate, testDate]);
+  }, [
+    manualMode,
+    manualMonths,
+    manualSessionsPerWeek,
+    pointGap,
+    currentScore,
+    agreementDate,
+    testDate,
+  ]);
 
   const computedProgramDuration = program.programDuration;
   const computedSessionsPerWeek = program.sessionsPerWeek;
@@ -161,7 +208,8 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
   const submitBlocked =
     program.trackType === "below_floor" ||
-    program.trackType === "insufficient_data";
+    program.trackType === "insufficient_data" ||
+    program.trackType === "manual_incomplete";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -171,7 +219,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       !parentEmail ||
       !parentPhone ||
       !studentName ||
-      currentScore === "" ||
       targetScore === "" ||
       !testDate ||
       totalPrice === ""
@@ -206,6 +253,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       parent_phone: parentPhone,
       agreement_date: agreementDate,
       student_name: studentName,
+      current_score: typeof currentScore === "number" ? currentScore : null,
       target_score: Number(targetScore),
       program_duration: computedProgramDuration,
       sessions_per_week: computedSessionsPerWeek,
@@ -288,12 +336,12 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             onChange={(e) => setStudentName(e.target.value)}
           />
         </Field>
-        <Field label="Current SAT Score (Diagnostic)">
+        <Field label="Current SAT Score (Diagnostic) — optional">
           <input
-            required
             type="number"
             className="input"
             value={currentScore}
+            placeholder="Leave blank if no diagnostic yet"
             onChange={(e) =>
               setCurrentScore(e.target.value === "" ? "" : Number(e.target.value))
             }
@@ -326,11 +374,47 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
           />
         </Field>
 
+        {manualMode && (
+          <>
+            <Field label="Program Duration (months)">
+              <input
+                type="number"
+                min={1}
+                max={12}
+                className="input"
+                value={manualMonths}
+                placeholder="e.g. 3"
+                onChange={(e) =>
+                  setManualMonths(e.target.value === "" ? "" : Number(e.target.value))
+                }
+              />
+            </Field>
+            <Field label="Sessions Per Week">
+              <select
+                className="input"
+                value={manualSessionsPerWeek}
+                onChange={(e) =>
+                  setManualSessionsPerWeek(Number(e.target.value) === 3 ? 3 : 2)
+                }
+              >
+                <option value={2}>2 (standard pace)</option>
+                <option value={3}>3 (compressed)</option>
+              </select>
+            </Field>
+          </>
+        )}
+
         <div className="md:col-span-2">
           {program.trackType === "insufficient_data" && (
             <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">
-              Enter the student&apos;s current score, target score, and target
-              SAT test date to calculate the program structure.
+              Enter the target SAT score and test date to calculate the program
+              structure.
+            </div>
+          )}
+          {program.trackType === "manual_incomplete" && (
+            <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">
+              No diagnostic score yet — enter the program duration, sessions per
+              week, and target SAT test date manually.
             </div>
           )}
 
@@ -349,17 +433,28 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
           )}
 
           {(program.trackType === "standard" ||
-            program.trackType === "compressed") && (
+            program.trackType === "compressed" ||
+            program.trackType === "manual") && (
             <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Computed program structure
+                {program.trackType === "manual"
+                  ? "Manual program structure"
+                  : "Computed program structure"}
               </div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-slate-700">
-                <dt className="text-slate-500">Point Gap</dt>
-                <dd className="font-medium">{pointGap}</dd>
+                {program.trackType !== "manual" && (
+                  <>
+                    <dt className="text-slate-500">Point Gap</dt>
+                    <dd className="font-medium">{pointGap}</dd>
+                  </>
+                )}
                 <dt className="text-slate-500">Track</dt>
                 <dd className="font-medium">
-                  {program.trackType === "standard" ? "Standard" : "Compressed"}
+                  {program.trackType === "standard"
+                    ? "Standard"
+                    : program.trackType === "compressed"
+                    ? "Compressed"
+                    : "Manual"}
                 </dd>
                 <dt className="text-slate-500">Program Duration</dt>
                 <dd className="font-medium">{computedProgramDuration}</dd>
