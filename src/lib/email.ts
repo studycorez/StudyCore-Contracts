@@ -52,6 +52,45 @@ export async function sendContractEmail({ contract, closerName }: InitialEmailAr
   });
 }
 
+interface PaymentLinkEmailArgs {
+  contract: Contract;
+  closerName: string;
+  paymentUrl: string;
+}
+
+export async function sendPaymentLinkEmail({
+  contract,
+  closerName,
+  paymentUrl,
+}: PaymentLinkEmailArgs) {
+  const resend = getResend();
+  const due = formatMoney(contract.amount_due_at_signing);
+
+  const html = brandedEmail({
+    preheader: `Your secure StudyCore payment link for ${contract.student_name} is ready.`,
+    title: `Reserve ${contract.student_name}'s start date`,
+    intro: `Hi ${escapeHtml(contract.parent_name)},`,
+    paragraphs: [
+      `${escapeHtml(closerName)} from StudyCore has prepared your enrollment for <strong>${escapeHtml(
+        contract.student_name
+      )}</strong>. Click below to securely submit your <strong>${due}</strong> deposit via Stripe and lock in your start date.`,
+      `Your full SAT Tutoring Services Agreement will follow in a separate email for review and signature.`,
+    ],
+    buttonLabel: "Pay deposit via Stripe",
+    buttonHref: paymentUrl,
+    afterButton: `If the button doesn't work, copy and paste this link into your browser:<br><a href="${paymentUrl}" style="color:#1A3C6B;word-break:break-all;">${paymentUrl}</a>`,
+    footer: `Questions? Reply to this email or write to support@studycore.net.`,
+  });
+
+  await resend.emails.send({
+    from: FROM,
+    to: contract.parent_email,
+    subject: "StudyCore — Payment Link for SAT Enrollment",
+    html,
+    replyTo: "support@studycore.net",
+  });
+}
+
 interface CompletionEmailArgs {
   contract: Contract;
   closerEmail?: string | null;

@@ -10,6 +10,7 @@ type PaymentStructure =
 type GuaranteeType =
   | "We Work With You Free Until You Hit Your Score"
   | "No Guarantee";
+type SendOption = "contract_only" | "payment_only" | "both";
 
 type TrackType = "standard" | "compressed" | "below_floor" | "insufficient_data";
 
@@ -76,6 +77,9 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const [trialWindow, setTrialWindow] = useState<"Yes" | "No">("Yes");
   const [showCancellationRefundTerms, setShowCancellationRefundTerms] =
     useState<"Yes" | "No">("Yes");
+
+  // Section 6 — Sending method
+  const [sendOption, setSendOption] = useState<SendOption>("both");
 
   const pointGap =
     typeof targetScore === "number" && typeof currentScore === "number"
@@ -189,6 +193,15 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       setError("Enter the upfront amount for the 50/50 plan.");
       return;
     }
+    if (
+      (sendOption === "payment_only" || sendOption === "both") &&
+      amountDueAtSigning <= 0
+    ) {
+      setError(
+        "A Stripe payment link needs a non-zero amount due at signing. Choose 'Contract only' for full-financing plans with $0 due now."
+      );
+      return;
+    }
 
     setSubmitting(true);
     const payload = {
@@ -216,6 +229,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       guarantee_type: guaranteeType,
       trial_window: trialWindow === "Yes",
       show_cancellation_refund_terms: showCancellationRefundTerms === "Yes",
+      send_option: sendOption,
     };
 
     const res = await fetch("/api/contracts", {
@@ -495,6 +509,35 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         </Field>
       </FormSection>
 
+      <FormSection
+        title="6. Sending Method"
+        subtitle="Choose what the parent receives right now. You can send the other piece later from the contract page."
+      >
+        <div className="md:col-span-2 space-y-2">
+          <SendOptionCard
+            value="both"
+            current={sendOption}
+            onChange={setSendOption}
+            label="Send contract & payment link together"
+            description="Parent gets two emails right now: the signing link and the direct Stripe payment link."
+          />
+          <SendOptionCard
+            value="contract_only"
+            current={sendOption}
+            onChange={setSendOption}
+            label="Send contract only — payment link later"
+            description="Parent gets the signing link now. You can email the Stripe payment link from the contract page after they sign."
+          />
+          <SendOptionCard
+            value="payment_only"
+            current={sendOption}
+            onChange={setSendOption}
+            label="Send payment link first — contract later"
+            description="Parent gets a direct Stripe payment link now. You can email the contract for signing afterwards."
+          />
+        </div>
+      </FormSection>
+
       {error && (
         <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
@@ -513,7 +556,13 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
           className="btn-primary"
           disabled={submitting || submitBlocked}
         >
-          {submitting ? "Sending…" : "Generate & email contract"}
+          {submitting
+            ? "Sending…"
+            : sendOption === "contract_only"
+            ? "Generate & email contract"
+            : sendOption === "payment_only"
+            ? "Generate & email payment link"
+            : "Generate & email contract + payment link"}
         </button>
       </div>
     </form>
@@ -554,5 +603,43 @@ function Field({
       <label className="label">{label}</label>
       {children}
     </div>
+  );
+}
+
+function SendOptionCard({
+  value,
+  current,
+  onChange,
+  label,
+  description,
+}: {
+  value: SendOption;
+  current: SendOption;
+  onChange: (v: SendOption) => void;
+  label: string;
+  description: string;
+}) {
+  const selected = current === value;
+  return (
+    <label
+      className={
+        "flex cursor-pointer items-start gap-3 rounded-md border px-4 py-3 transition " +
+        (selected
+          ? "border-navy bg-navy/5"
+          : "border-slate-200 hover:border-slate-300")
+      }
+    >
+      <input
+        type="radio"
+        name="send_option"
+        className="mt-1 h-4 w-4 text-navy focus:ring-navy/30"
+        checked={selected}
+        onChange={() => onChange(value)}
+      />
+      <div>
+        <div className="font-medium text-slate-800">{label}</div>
+        <div className="text-sm text-slate-500">{description}</div>
+      </div>
+    </label>
   );
 }

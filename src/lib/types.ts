@@ -16,6 +16,8 @@ export type GuaranteeType =
   | "We Work With You Free Until You Hit Your Score"
   | "No Guarantee";
 
+export type SendOption = "contract_only" | "payment_only" | "both";
+
 export interface AppUser {
   id: string;
   email: string;
@@ -57,9 +59,14 @@ export interface Contract {
   next_sat_date?: string;                   // e.g. "May 3, 2026"
   score_report_submission_days?: number;    // e.g. 14
   status: ContractStatus;
+  send_option: SendOption;
+  contract_sent_at: string | null;
+  payment_link_sent_at: string | null;
   signed_at: string | null;
   paid_at: string | null;
   stripe_payment_intent_id: string | null;
+  stripe_checkout_session_id: string | null;
+  stripe_checkout_url: string | null;
   pdf_url: string | null;
   signing_token: string;
   created_at: string;

@@ -30,8 +30,8 @@ export async function POST(req: Request) {
 
   // Verify Stripe payment if amount due
   const dueCents = Math.round(Number(contract.amount_due_at_signing) * 100);
-  let paidAt: string | null = null;
-  if (dueCents > 0) {
+  let paidAt: string | null = contract.paid_at ?? null;
+  if (dueCents > 0 && !paidAt) {
     if (!contract.stripe_payment_intent_id) {
       return NextResponse.json(
         { error: "No payment intent found for this contract." },

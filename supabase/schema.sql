@@ -64,9 +64,14 @@ create table if not exists public.contracts (
 
   -- Lifecycle
   status text not null default 'draft' check (status in ('draft','sent','viewed','signed','completed')),
+  send_option text not null default 'both' check (send_option in ('contract_only', 'payment_only', 'both')),
+  contract_sent_at timestamptz,
+  payment_link_sent_at timestamptz,
   signed_at timestamptz,
   paid_at timestamptz,
   stripe_payment_intent_id text,
+  stripe_checkout_session_id text,
+  stripe_checkout_url text,
   pdf_url text,
   signing_token text not null unique default encode(gen_random_bytes(32), 'hex'),
   signature_data text,

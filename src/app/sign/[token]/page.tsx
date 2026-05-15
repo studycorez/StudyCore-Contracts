@@ -49,6 +49,7 @@ export default async function SignPage({
     payment_intent?: string;
     payment_intent_client_secret?: string;
     redirect_status?: string;
+    checkout?: string;
   };
 }) {
   const admin = createAdminClient();
@@ -70,7 +71,46 @@ export default async function SignPage({
   }
 
   const isComplete = contract.status === "completed" || contract.status === "signed";
-  const dueAtSigningCents = Math.round(Number(contract.amount_due_at_signing) * 100);
+  let dueAtSigningCents = Math.round(Number(contract.amount_due_at_signing) * 100);
+
+  // If a separate Stripe Checkout was used (closer chose "payment first" or
+  // "both"), the PI may already be paid before the parent ever opens the
+  // signing UI. Detect that, mark the contract paid, and skip the in-page
+  // payment block — they only need to sign.
+  let alreadyPaidViaCheckout = false;
+  if (
+    !isComplete &&
+    dueAtSigningCents > 0 &&
+    contract.stripe_checkout_session_id &&
+    !contract.paid_at
+  ) {
+    try {
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.retrieve(
+        contract.stripe_checkout_session_id
+      );
+      if (session.payment_status === "paid") {
+        alreadyPaidViaCheckout = true;
+        await admin
+          .from("contracts")
+          .update({ paid_at: new Date().toISOString() })
+          .eq("id", contract.id);
+        contract.paid_at = new Date().toISOString();
+      }
+    } catch {
+      // ignore — fall through to standard payment UI
+    }
+  } else if (
+    !isComplete &&
+    dueAtSigningCents > 0 &&
+    contract.paid_at
+  ) {
+    alreadyPaidViaCheckout = true;
+  }
+
+  if (alreadyPaidViaCheckout) {
+    dueAtSigningCents = 0;
+  }
 
   // The parent has just been redirected back to us from a Stripe redirect-based
   // payment method (Klarna, Affirm, etc.). The query params tell us how it
