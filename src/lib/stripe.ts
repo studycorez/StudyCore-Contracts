@@ -33,6 +33,9 @@ export async function createCheckoutSessionForContract({
     mode: "payment",
     payment_method_types: ["card"],
     customer_email: contract.parent_email,
+    // Create a Stripe Customer so the saved card is attached to a reusable
+    // record (a bare PaymentIntent doesn't attach the PM to a customer).
+    customer_creation: "always",
     line_items: [
       {
         quantity: 1,
@@ -52,6 +55,7 @@ export async function createCheckoutSessionForContract({
     payment_intent_data: {
       description: `StudyCore SAT Agreement — ${contract.student_name}`,
       metadata: { contract_id: contract.id },
+      setup_future_usage: "off_session",
     },
   });
 }
