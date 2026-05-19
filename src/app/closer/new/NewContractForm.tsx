@@ -12,41 +12,7 @@ type GuaranteeType =
   | "No Guarantee";
 type SendOption = "contract_only" | "payment_only" | "both";
 
-type TrackType =
-  | "standard"
-  | "compressed"
-  | "below_floor"
-  | "insufficient_data"
-  | "manual"
-  | "manual_incomplete";
-
 const today = () => new Date().toISOString().slice(0, 10);
-
-function getStandardMonths(gap: number, currentScore: number): number {
-  if (gap <= 100) return currentScore >= 1400 ? 2 : 1;
-  if (gap <= 200) return 3;
-  if (gap <= 250) return 4;
-  if (gap <= 300) return 5;
-  if (gap <= 350) return 5;
-  return 6; // 351–400
-}
-
-function getFloorWeeks(gap: number, currentScore: number): number {
-  if (gap <= 100) return currentScore >= 1400 ? 6 : 4;
-  if (gap <= 200) return 10;
-  if (gap <= 300) return 14;
-  return 18; // 301–400
-}
-
-function getAvailableWeeks(start: string, test: string): number {
-  if (!start || !test) return 0;
-  const s = new Date(start);
-  const t = new Date(test);
-  if (isNaN(s.getTime()) || isNaN(t.getTime())) return 0;
-  const ms = t.getTime() - s.getTime();
-  if (ms <= 0) return 0;
-  return Math.floor(ms / (7 * 24 * 60 * 60 * 1000));
-}
 
 export default function NewContractForm({ closerName }: { closerName: string }) {
   const router = useRouter();
@@ -62,14 +28,12 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const [currentScore, setCurrentScore] = useState<number | "">("");
   const [targetScore, setTargetScore] = useState<number | "">("");
 
-  // Section 2
+  // Section 2 — Program (closer enters every field, no auto-calculation)
   const [testDate, setTestDate] = useState("");
-  // Manual program-structure inputs used when current SAT score is missing
-  // (so the auto-calculator can't run). Closer fills every field explicitly.
-  const [manualWeeks, setManualWeeks] = useState<number | "">("");
-  const [manualSessionsPerWeek, setManualSessionsPerWeek] = useState<1 | 2 | 3 | "">("");
-  const [manualSessionLength, setManualSessionLength] = useState<1 | 1.5 | 2 | "">("");
-  const [manualTotalHours, setManualTotalHours] = useState<number | "">("");
+  const [programWeeks, setProgramWeeks] = useState<number | "">("");
+  const [sessionsPerWeek, setSessionsPerWeek] = useState<number | "">("");
+  const [sessionLength, setSessionLength] = useState<number | "">("");
+  const [totalHours, setTotalHours] = useState<number | "">("");
 
   // Section 3
   const [totalPrice, setTotalPrice] = useState<number | "">("");
@@ -91,106 +55,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   // Section 6 — Sending method
   const [sendOption, setSendOption] = useState<SendOption>("both");
 
-  const pointGap =
-    typeof targetScore === "number" && typeof currentScore === "number"
-      ? targetScore - currentScore
-      : null;
-
-  const manualMode = typeof currentScore !== "number";
-
-  const program = useMemo(() => {
-    if (manualMode) {
-      // No diagnostic score → closer fills every program field by hand.
-      const weeksOk = typeof manualWeeks === "number" && manualWeeks > 0;
-      const sessionsOk = typeof manualSessionsPerWeek === "number";
-      const lengthOk = typeof manualSessionLength === "number";
-      const hoursOk = typeof manualTotalHours === "number" && manualTotalHours > 0;
-      if (!weeksOk || !sessionsOk || !lengthOk || !hoursOk || !testDate) {
-        return {
-          trackType: "manual_incomplete" as TrackType,
-          standardMonths: 0,
-          floorWeeks: 0,
-          availableWeeks: 0,
-          sessionsPerWeek: 0,
-          totalHours: 0,
-          programDuration: "",
-        };
-      }
-      return {
-        trackType: "manual" as TrackType,
-        standardMonths: 0,
-        floorWeeks: 0,
-        availableWeeks: getAvailableWeeks(agreementDate, testDate),
-        sessionsPerWeek: manualSessionsPerWeek,
-        totalHours: manualTotalHours,
-        programDuration: `${manualWeeks} week${manualWeeks === 1 ? "" : "s"}`,
-      };
-    }
-    if (
-      pointGap === null ||
-      typeof currentScore !== "number" ||
-      !agreementDate ||
-      !testDate
-    ) {
-      return {
-        trackType: "insufficient_data" as TrackType,
-        standardMonths: 0,
-        floorWeeks: 0,
-        availableWeeks: 0,
-        sessionsPerWeek: 0,
-        totalHours: 0,
-        programDuration: "",
-      };
-    }
-    const standardMonths = getStandardMonths(pointGap, currentScore);
-    const floorWeeks = getFloorWeeks(pointGap, currentScore);
-    const availableWeeks = getAvailableWeeks(agreementDate, testDate);
-    if (availableWeeks < floorWeeks) {
-      return {
-        trackType: "below_floor" as TrackType,
-        standardMonths,
-        floorWeeks,
-        availableWeeks,
-        sessionsPerWeek: 0,
-        totalHours: 0,
-        programDuration: "",
-      };
-    }
-    if (availableWeeks >= standardMonths * 4) {
-      return {
-        trackType: "standard" as TrackType,
-        standardMonths,
-        floorWeeks,
-        availableWeeks,
-        sessionsPerWeek: 2,
-        totalHours: standardMonths * 8,
-        programDuration: `${standardMonths} months (${standardMonths * 4} weeks)`,
-      };
-    }
-    return {
-      trackType: "compressed" as TrackType,
-      standardMonths,
-      floorWeeks,
-      availableWeeks,
-      sessionsPerWeek: 3,
-      totalHours: standardMonths * 8,
-      programDuration: `${standardMonths} months compressed into ${availableWeeks} weeks (3 sessions/week)`,
-    };
-  }, [
-    manualMode,
-    manualWeeks,
-    manualSessionsPerWeek,
-    manualSessionLength,
-    manualTotalHours,
-    pointGap,
-    currentScore,
-    agreementDate,
-    testDate,
-  ]);
-
-  const computedProgramDuration = program.programDuration;
-  const computedSessionsPerWeek = program.sessionsPerWeek;
-  const computedTotalHours = program.totalHours;
+  const programDuration =
+    typeof programWeeks === "number" && programWeeks > 0
+      ? `${programWeeks} week${programWeeks === 1 ? "" : "s"}`
+      : "";
 
   const remainingBalance = useMemo(() => {
     if (paymentStructure !== "50% Upfront + Financed Balance") return null;
@@ -210,11 +78,6 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
     return 0; // Full financing — no amount due at signing here
   }, [totalPrice, upfrontAmount, paymentStructure]);
 
-  const submitBlocked =
-    program.trackType === "below_floor" ||
-    program.trackType === "insufficient_data" ||
-    program.trackType === "manual_incomplete";
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -225,15 +88,13 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       !studentName ||
       targetScore === "" ||
       !testDate ||
-      totalPrice === ""
+      totalPrice === "" ||
+      programWeeks === "" ||
+      sessionsPerWeek === "" ||
+      sessionLength === "" ||
+      totalHours === ""
     ) {
       setError("Please complete every required field.");
-      return;
-    }
-    if (submitBlocked) {
-      setError(
-        "Program structure cannot be calculated for this student. Resolve the program section before submitting."
-      );
       return;
     }
     if (paymentStructure === "50% Upfront + Financed Balance" && upfrontAmount === "") {
@@ -259,13 +120,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
       student_name: studentName,
       current_score: typeof currentScore === "number" ? currentScore : null,
       target_score: Number(targetScore),
-      program_duration: computedProgramDuration,
-      sessions_per_week: computedSessionsPerWeek,
-      session_length:
-        manualMode && typeof manualSessionLength === "number"
-          ? manualSessionLength
-          : 1,
-      total_hours: computedTotalHours,
+      program_duration: programDuration,
+      sessions_per_week: Number(sessionsPerWeek),
+      session_length: Number(sessionLength),
+      total_hours: Number(totalHours),
       test_date: testDate,
       total_price: Number(totalPrice),
       payment_structure: paymentStructure,
@@ -369,7 +227,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
       <FormSection
         title="2. Program"
-        subtitle="Target SAT date drives program structure and guarantees."
+        subtitle="Closer chooses every program detail. No auto-calculation or score-based restrictions."
       >
         <Field label="Target SAT Test Date">
           <input
@@ -380,123 +238,61 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             onChange={(e) => setTestDate(e.target.value)}
           />
         </Field>
-
-        {manualMode && (
-          <>
-            <Field label="Program Duration (weeks)">
-              <input
-                type="number"
-                min={1}
-                className="input"
-                value={manualWeeks}
-                placeholder="e.g. 12"
-                onChange={(e) =>
-                  setManualWeeks(e.target.value === "" ? "" : Number(e.target.value))
-                }
-              />
-            </Field>
-            <Field label="Sessions Per Week">
-              <select
-                className="input"
-                value={manualSessionsPerWeek}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setManualSessionsPerWeek(v === "" ? "" : (Number(v) as 1 | 2 | 3));
-                }}
-              >
-                <option value="">Select…</option>
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={3}>3</option>
-              </select>
-            </Field>
-            <Field label="Session Length (hours)">
-              <select
-                className="input"
-                value={manualSessionLength}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setManualSessionLength(v === "" ? "" : (Number(v) as 1 | 1.5 | 2));
-                }}
-              >
-                <option value="">Select…</option>
-                <option value={1}>1</option>
-                <option value={1.5}>1.5</option>
-                <option value={2}>2</option>
-              </select>
-            </Field>
-            <Field label="Total Program Hours">
-              <input
-                type="number"
-                step="0.5"
-                min={1}
-                className="input"
-                value={manualTotalHours}
-                placeholder="e.g. 24"
-                onChange={(e) =>
-                  setManualTotalHours(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
-              />
-            </Field>
-          </>
-        )}
-
-        <div className="md:col-span-2">
-          {program.trackType === "insufficient_data" && (
-            <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">
-              Enter the target SAT score and test date to calculate the program
-              structure.
-            </div>
-          )}
-          {program.trackType === "manual_incomplete" && (
-            <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">
-              No diagnostic score — fill in every program field above
-              (duration, sessions per week, session length, total hours) and
-              the target SAT test date.
-            </div>
-          )}
-
-          {program.trackType === "below_floor" && (
-            <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-              <div className="font-semibold">
-                ⚠️ This student does not meet the minimum timeline for a full program.
-              </div>
-              <p className="mt-1">
-                The test date is too close for the required minimum of{" "}
-                {program.floorWeeks} weeks. You may only offer the Targeted Intensive
-                option — not a full program. Do not proceed with a full contract for
-                this student.
-              </p>
-            </div>
-          )}
-
-          {(program.trackType === "standard" ||
-            program.trackType === "compressed") && (
-            <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Computed program structure
-              </div>
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-slate-700">
-                <dt className="text-slate-500">Point Gap</dt>
-                <dd className="font-medium">{pointGap}</dd>
-                <dt className="text-slate-500">Track</dt>
-                <dd className="font-medium">
-                  {program.trackType === "standard" ? "Standard" : "Compressed"}
-                </dd>
-                <dt className="text-slate-500">Program Duration</dt>
-                <dd className="font-medium">{computedProgramDuration}</dd>
-                <dt className="text-slate-500">Sessions Per Week</dt>
-                <dd className="font-medium">{computedSessionsPerWeek}</dd>
-                <dt className="text-slate-500">Session Length</dt>
-                <dd className="font-medium">1 hour</dd>
-                <dt className="text-slate-500">Total Program Hours</dt>
-                <dd className="font-medium">{computedTotalHours}</dd>
-              </dl>
-            </div>
-          )}
-        </div>
+        <Field label="Program Duration (weeks)">
+          <input
+            required
+            type="number"
+            min={1}
+            className="input"
+            value={programWeeks}
+            placeholder="e.g. 12"
+            onChange={(e) =>
+              setProgramWeeks(e.target.value === "" ? "" : Number(e.target.value))
+            }
+          />
+        </Field>
+        <Field label="Sessions Per Week">
+          <input
+            required
+            type="number"
+            step="0.5"
+            min={0.5}
+            className="input"
+            value={sessionsPerWeek}
+            placeholder="e.g. 2"
+            onChange={(e) =>
+              setSessionsPerWeek(e.target.value === "" ? "" : Number(e.target.value))
+            }
+          />
+        </Field>
+        <Field label="Session Length (hours)">
+          <input
+            required
+            type="number"
+            step="0.25"
+            min={0.25}
+            className="input"
+            value={sessionLength}
+            placeholder="e.g. 1"
+            onChange={(e) =>
+              setSessionLength(e.target.value === "" ? "" : Number(e.target.value))
+            }
+          />
+        </Field>
+        <Field label="Total Program Hours">
+          <input
+            required
+            type="number"
+            step="0.5"
+            min={1}
+            className="input"
+            value={totalHours}
+            placeholder="e.g. 24"
+            onChange={(e) =>
+              setTotalHours(e.target.value === "" ? "" : Number(e.target.value))
+            }
+          />
+        </Field>
       </FormSection>
 
       <FormSection title="3. Payment" subtitle="Total investment and how it's collected.">
@@ -589,9 +385,10 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
           label={
             showCancellationRefundTerms === "Yes" &&
             totalPrice !== "" &&
-            computedTotalHours > 0
+            typeof totalHours === "number" &&
+            totalHours > 0
               ? `Show Cancellation Refund Terms (rate: $${(
-                  Number(totalPrice) / computedTotalHours
+                  Number(totalPrice) / Number(totalHours)
                 ).toFixed(2)} / hr)`
               : "Show Cancellation Refund Terms"
           }
@@ -654,7 +451,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         <button
           type="submit"
           className="btn-primary"
-          disabled={submitting || submitBlocked}
+          disabled={submitting}
         >
           {submitting
             ? "Sending…"
