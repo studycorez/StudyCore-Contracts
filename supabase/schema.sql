@@ -28,7 +28,7 @@ create table if not exists public.contracts (
   parent_phone text not null,
   agreement_date date not null default current_date,
   student_name text not null,
-  current_score int not null,
+  current_score int,
   target_score int not null,
 
   -- Section 2 — Program
