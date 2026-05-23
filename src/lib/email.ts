@@ -98,6 +98,73 @@ interface CompletionEmailArgs {
   pdfBuffer: Buffer;
 }
 
+interface PaymentReceivedEmailArgs {
+  contract: Contract;
+  closerEmail?: string | null;
+  closerName?: string | null;
+}
+
+// Sent when payment arrives AFTER the parent has already signed (the
+// "contract only" flow). The signed PDF was already emailed at sign time, so
+// this is just a short confirmation that the deposit was received and
+// enrollment is now fully confirmed.
+export async function sendPaymentReceivedEmail({
+  contract,
+  closerEmail,
+  closerName,
+}: PaymentReceivedEmailArgs) {
+  const resend = getResend();
+  const due = formatMoney(contract.amount_due_at_signing);
+
+  await resend.emails.send({
+    from: FROM,
+    to: contract.parent_email,
+    subject: "StudyCore — Payment Received, Enrollment Confirmed",
+    html: brandedEmail({
+      preheader: "Your deposit has been received. Welcome to StudyCore!",
+      title: "You're enrolled — welcome to StudyCore!",
+      intro: `Hi ${escapeHtml(contract.parent_name)},`,
+      paragraphs: [
+        `Your deposit of <strong>${due}</strong> for <strong>${escapeHtml(
+          contract.student_name
+        )}</strong>'s SAT enrollment has been received. Combined with your previously signed agreement, your enrollment is now fully confirmed.`,
+        `Our team will reach out within 24 hours to schedule your first session and match your tutor. A copy of your signed agreement was emailed to you earlier — keep it for your records.`,
+      ],
+      buttonLabel: "Visit StudyCore",
+      buttonHref: "https://studycore.net",
+      footer: "Questions? Email support@studycore.net any time.",
+    }),
+    replyTo: "support@studycore.net",
+  });
+
+  const adminRecipients = Array.from(
+    new Set([ADMIN_NOTIFICATION_TO, closerEmail].filter(Boolean) as string[])
+  );
+  await resend.emails.send({
+    from: FROM,
+    to: adminRecipients,
+    subject: `Payment received: ${contract.student_name} (${contract.parent_name})`,
+    html: brandedEmail({
+      preheader: "Deposit received; contract is fully complete.",
+      title: "Payment received",
+      intro: "A previously signed StudyCore agreement has now been paid.",
+      paragraphs: [
+        `<strong>Student:</strong> ${escapeHtml(contract.student_name)}<br>
+         <strong>Parent:</strong> ${escapeHtml(contract.parent_name)} (${escapeHtml(
+          contract.parent_email
+        )})<br>
+         <strong>Closer:</strong> ${escapeHtml(closerName ?? "—")}<br>
+         <strong>Total:</strong> ${formatMoney(contract.total_price)}<br>
+         <strong>Deposit collected:</strong> ${due}`,
+      ],
+      buttonLabel: "Open admin dashboard",
+      buttonHref: `${appUrl()}/admin/contracts/${contract.id}`,
+      footer: "StudyCore Contracts",
+    }),
+    replyTo: "support@studycore.net",
+  });
+}
+
 export async function sendCompletionEmails({
   contract,
   closerEmail,

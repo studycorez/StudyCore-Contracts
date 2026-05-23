@@ -48,6 +48,7 @@ npm run dev
 | `SUPABASE_SERVICE_ROLE_KEY`           | Supabase → Project settings → API (**keep secret**)          |
 | `STRIPE_SECRET_KEY`                   | Stripe → Developers → API keys                               |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`  | Stripe → Developers → API keys                               |
+| `STRIPE_WEBHOOK_SECRET`               | Stripe → Developers → Webhooks → endpoint signing secret     |
 | `RESEND_API_KEY`                      | Resend → API Keys                                            |
 | `NEXT_PUBLIC_APP_URL`                 | `https://sign.studycore.net` (or `http://localhost:3000`)    |
 
@@ -92,9 +93,23 @@ After you have the first admin, every other closer is created from the in-app
    parents to see (cards are on by default; ACH, Affirm, Klarna, etc. as
    desired). The signing page uses `automatic_payment_methods` so anything
    enabled in Stripe will appear.
-4. No webhook is required. Payment confirmation happens client-side via
-   `stripe.confirmPayment()` and is re-verified server-side from the saved
-   `payment_intent_id` before the contract is marked complete.
+4. **Configure the webhook.** This is required so payments made via the
+   separately emailed Stripe Checkout link (the "Send contract only — payment
+   link later" and "Send payment link first — contract later" flows) get
+   recorded back on the contract.
+   - **Developers → Webhooks → Add endpoint**
+   - Endpoint URL: `https://<your-domain>/api/stripe/webhook`
+     (use `stripe listen --forward-to localhost:3000/api/stripe/webhook` for
+     local development)
+   - Events to send:
+     - `checkout.session.completed`
+     - `checkout.session.async_payment_succeeded`
+     - `payment_intent.succeeded`
+   - Copy the endpoint's **Signing secret** → `STRIPE_WEBHOOK_SECRET`
+
+   Inline payments (parent signs and pays on the sign page) are still
+   re-verified server-side from the saved `payment_intent_id`; the webhook is
+   idempotent and a no-op when `paid_at` is already set.
 
 ---
 
