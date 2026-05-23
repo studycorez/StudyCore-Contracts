@@ -73,6 +73,14 @@ export default async function SignPage({
   const isComplete = contract.status === "completed" || contract.status === "signed";
   let dueAtSigningCents = Math.round(Number(contract.amount_due_at_signing) * 100);
 
+  // "Contract only" means the closer is sending the Stripe payment link
+  // separately (later). The parent should be able to sign now without paying;
+  // payment is collected out-of-band.
+  const paymentHandledSeparately = contract.send_option === "contract_only";
+  if (paymentHandledSeparately) {
+    dueAtSigningCents = 0;
+  }
+
   // If a separate Stripe Checkout was used (closer chose "payment first" or
   // "both"), the PI may already be paid before the parent ever opens the
   // signing UI. Detect that, mark the contract paid, and skip the in-page
@@ -210,15 +218,31 @@ export default async function SignPage({
   const clauses = buildContractClauses(contract as Contract);
 
   if (isComplete) {
+    const fullyPaid =
+      !!contract.paid_at ||
+      Math.round(Number(contract.amount_due_at_signing) * 100) === 0;
     return (
       <main className="doc-shell">
         <DocHeader />
         <div className="mx-auto max-w-2xl px-6 py-24 text-center">
-          <div className="doc-eyebrow-accent">Signed &amp; Confirmed</div>
+          <div className="doc-eyebrow-accent">
+            {fullyPaid ? "Signed & Confirmed" : "Signed — Payment Pending"}
+          </div>
           <h1 className="doc-h1 mt-3">This agreement has been countersigned.</h1>
           <p className="mt-4 font-serif text-[15px] leading-[1.7] text-slate-700">
-            You signed and paid for {contract.student_name}&apos;s enrollment. A copy was
-            emailed to you. If you need it again, contact{" "}
+            {fullyPaid ? (
+              <>
+                You signed and paid for {contract.student_name}&apos;s enrollment. A copy was
+                emailed to you.
+              </>
+            ) : (
+              <>
+                You signed {contract.student_name}&apos;s enrollment agreement. A copy was
+                emailed to you. Your StudyCore contact will follow up with a secure Stripe
+                payment link to complete enrollment.
+              </>
+            )}{" "}
+            If you need anything, contact{" "}
             <a className="text-navy underline-offset-2 hover:underline" href="mailto:support@studycore.net">
               support@studycore.net
             </a>

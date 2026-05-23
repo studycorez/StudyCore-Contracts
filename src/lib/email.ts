@@ -111,23 +111,41 @@ export async function sendCompletionEmails({
     content: pdfBuffer.toString("base64"),
   };
 
+  const dueCents = Math.round(Number(contract.amount_due_at_signing) * 100);
+  const fullyPaid = dueCents === 0 || !!contract.paid_at;
+
   // Parent confirmation
   await resend.emails.send({
     from: FROM,
     to: contract.parent_email,
-    subject: "StudyCore SAT Agreement — Signed & Confirmed",
+    subject: fullyPaid
+      ? "StudyCore SAT Agreement — Signed & Confirmed"
+      : "StudyCore SAT Agreement — Signed (Payment Pending)",
     html: brandedEmail({
-      preheader: "Your enrollment is confirmed.",
-      title: "You're enrolled — welcome to StudyCore!",
+      preheader: fullyPaid
+        ? "Your enrollment is confirmed."
+        : "Your signed agreement is attached. Payment to follow.",
+      title: fullyPaid
+        ? "You're enrolled — welcome to StudyCore!"
+        : "Your agreement is signed.",
       intro: `Hi ${escapeHtml(contract.parent_name)},`,
-      paragraphs: [
-        `Thank you for signing your StudyCore SAT Agreement for <strong>${escapeHtml(
-          contract.student_name
-        )}</strong>. Your payment of <strong>${formatMoney(
-          contract.amount_due_at_signing
-        )}</strong> has been received and your enrollment is confirmed.`,
-        `A copy of your fully signed agreement is attached for your records. Our team will reach out within 24 hours to schedule your first session and match your tutor.`,
-      ],
+      paragraphs: fullyPaid
+        ? [
+            `Thank you for signing your StudyCore SAT Agreement for <strong>${escapeHtml(
+              contract.student_name
+            )}</strong>. Your payment of <strong>${formatMoney(
+              contract.amount_due_at_signing
+            )}</strong> has been received and your enrollment is confirmed.`,
+            `A copy of your fully signed agreement is attached for your records. Our team will reach out within 24 hours to schedule your first session and match your tutor.`,
+          ]
+        : [
+            `Thank you for signing your StudyCore SAT Agreement for <strong>${escapeHtml(
+              contract.student_name
+            )}</strong>. A copy of your signed agreement is attached for your records.`,
+            `Your StudyCore contact will send you a secure Stripe payment link separately to complete the <strong>${formatMoney(
+              contract.amount_due_at_signing
+            )}</strong> due at signing. Enrollment is confirmed once payment is received.`,
+          ],
       buttonLabel: "Visit StudyCore",
       buttonHref: "https://studycore.net",
       footer: "Questions? Email support@studycore.net any time.",
@@ -143,11 +161,17 @@ export async function sendCompletionEmails({
   await resend.emails.send({
     from: FROM,
     to: adminRecipients,
-    subject: `Signed: ${contract.student_name} (${contract.parent_name})`,
+    subject: fullyPaid
+      ? `Signed & paid: ${contract.student_name} (${contract.parent_name})`
+      : `Signed (payment pending): ${contract.student_name} (${contract.parent_name})`,
     html: brandedEmail({
-      preheader: "A contract was signed.",
-      title: "Contract signed",
-      intro: `A new StudyCore SAT Agreement has been signed and paid.`,
+      preheader: fullyPaid
+        ? "A contract was signed and paid."
+        : "A contract was signed; payment still owed.",
+      title: fullyPaid ? "Contract signed" : "Contract signed — payment pending",
+      intro: fullyPaid
+        ? `A new StudyCore SAT Agreement has been signed and paid.`
+        : `A new StudyCore SAT Agreement has been signed. Payment has not been received yet — send the Stripe payment link from the contract page.`,
       paragraphs: [
         `<strong>Student:</strong> ${escapeHtml(contract.student_name)}<br>
          <strong>Parent:</strong> ${escapeHtml(contract.parent_name)} (${escapeHtml(
@@ -155,9 +179,12 @@ export async function sendCompletionEmails({
         )})<br>
          <strong>Closer:</strong> ${escapeHtml(closerName ?? "—")}<br>
          <strong>Total:</strong> ${formatMoney(contract.total_price)}<br>
-         <strong>Collected at signing:</strong> ${formatMoney(
+         <strong>Due at signing:</strong> ${formatMoney(
            contract.amount_due_at_signing
-         )}`,
+         )}<br>
+         <strong>Payment status:</strong> ${
+           fullyPaid ? "Collected" : "Pending — send payment link"
+         }`,
       ],
       buttonLabel: "Open admin dashboard",
       buttonHref: `${appUrl()}/admin/contracts/${contract.id}`,

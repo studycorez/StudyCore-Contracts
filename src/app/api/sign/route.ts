@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { renderContractPdf } from "@/lib/pdf/render";
 import { sendCompletionEmails } from "@/lib/email";
-import type { Contract } from "@/lib/types";
+import type { Contract, ContractStatus } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -28,28 +28,58 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, alreadyComplete: true });
   }
 
-  // Verify Stripe payment if amount due
+  // Resolve payment status. The closer's send_option determines whether
+  // payment must be verified at sign time:
+  //   - "contract_only": closer is sending the payment link separately. Allow
+  //     signing now; record payment later when it arrives.
+  //   - "payment_only" / "both": payment may have happened via the separately
+  //     emailed Stripe Checkout link, via the inline PaymentElement, or not
+  //     yet. Check both Checkout session and PaymentIntent before failing.
   const dueCents = Math.round(Number(contract.amount_due_at_signing) * 100);
   let paidAt: string | null = contract.paid_at ?? null;
-  if (dueCents > 0 && !paidAt) {
-    if (!contract.stripe_payment_intent_id) {
-      return NextResponse.json(
-        { error: "No payment intent found for this contract." },
-        { status: 400 }
-      );
-    }
+  const paymentHandledSeparately = contract.send_option === "contract_only";
+
+  if (dueCents > 0 && !paidAt && !paymentHandledSeparately) {
     const stripe = getStripe();
-    const pi = await stripe.paymentIntents.retrieve(contract.stripe_payment_intent_id);
-    if (pi.status !== "succeeded") {
+
+    if (contract.stripe_checkout_session_id) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(
+          contract.stripe_checkout_session_id
+        );
+        if (session.payment_status === "paid") {
+          paidAt = new Date().toISOString();
+        }
+      } catch {
+        // fall through to PaymentIntent check
+      }
+    }
+
+    if (!paidAt && contract.stripe_payment_intent_id) {
+      const pi = await stripe.paymentIntents.retrieve(
+        contract.stripe_payment_intent_id
+      );
+      if (pi.status === "succeeded") {
+        paidAt = new Date().toISOString();
+      } else {
+        return NextResponse.json(
+          { error: `Payment status is ${pi.status}; please complete payment first.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (!paidAt) {
       return NextResponse.json(
-        { error: `Payment status is ${pi.status}; please complete payment first.` },
+        { error: "Payment is required before signing. Please complete payment first." },
         { status: 400 }
       );
     }
-    paidAt = new Date().toISOString();
   }
 
   const signedAt = new Date().toISOString();
+  const fullyPaid = dueCents === 0 || !!paidAt;
+  const newStatus: ContractStatus = fullyPaid ? "completed" : "signed";
 
   // Render the signed PDF
   const pdfBuffer = await renderContractPdf(
@@ -80,7 +110,7 @@ export async function POST(req: Request) {
   const { error: updateError } = await admin
     .from("contracts")
     .update({
-      status: "completed",
+      status: newStatus,
       signed_at: signedAt,
       paid_at: paidAt,
       pdf_url: pdfUrl,
