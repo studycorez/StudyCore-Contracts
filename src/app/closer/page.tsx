@@ -15,7 +15,7 @@ export default async function CloserDashboard() {
   const { data: contracts } = await supabase
     .from("contracts")
     .select(
-      "id, parent_name, student_name, status, total_price, amount_due_at_signing, created_at, send_option, contract_sent_at, payment_link_sent_at"
+      "id, parent_name, student_name, test_type, status, total_price, amount_due_at_signing, created_at, send_option, contract_sent_at, payment_link_sent_at"
     )
     .eq("closer_id", user.id)
     .order("created_at", { ascending: false });
@@ -44,6 +44,7 @@ export default async function CloserDashboard() {
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
+              <th className="px-4 py-3">Test</th>
               <th className="px-4 py-3">Parent</th>
               <th className="px-4 py-3">Student</th>
               <th className="px-4 py-3">Status</th>
@@ -57,6 +58,9 @@ export default async function CloserDashboard() {
           <tbody className="divide-y divide-slate-100 bg-white">
             {(contracts ?? []).map((c) => (
               <tr key={c.id}>
+                <td className="px-4 py-3">
+                  <TestBadge testType={(c.test_type as "SAT" | "ACT" | null) ?? "SAT"} />
+                </td>
                 <td className="px-4 py-3 font-medium text-slate-800">{c.parent_name}</td>
                 <td className="px-4 py-3">{c.student_name}</td>
                 <td className="px-4 py-3">
@@ -81,7 +85,7 @@ export default async function CloserDashboard() {
             ))}
             {(!contracts || contracts.length === 0) && (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
+                <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
                   No contracts yet. Create your first one to get started.
                 </td>
               </tr>
@@ -90,5 +94,20 @@ export default async function CloserDashboard() {
         </table>
       </div>
     </DashboardShell>
+  );
+}
+
+function TestBadge({ testType }: { testType: "SAT" | "ACT" }) {
+  return (
+    <span
+      className={
+        "inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold " +
+        (testType === "ACT"
+          ? "bg-orange/10 text-orange-dark"
+          : "bg-navy/10 text-navy")
+      }
+    >
+      {testType}
+    </span>
   );
 }

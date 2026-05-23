@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { buildContractClauses } from "@/lib/contract-text";
+import { testCopy } from "@/lib/test-type";
 import { formatDate, formatMoney } from "@/lib/format";
 import type { Contract } from "@/lib/types";
 import StudyCoreLogo from "@/components/StudyCoreLogo";
@@ -154,6 +155,9 @@ export default async function SignPage({
   // Skip when we already verified a successful redirect — we're about to
   // render the finalizing UI and would otherwise create a stray fresh PI
   // (since the existing PI is already in a `succeeded` state).
+  const copy = testCopy((contract as Contract).test_type);
+  const piDescription = `StudyCore ${copy.name} Agreement — ${contract.student_name}`;
+
   let clientSecret: string | null = null;
   if (!isComplete && !verifiedRedirectSucceeded && dueAtSigningCents > 0) {
     const stripe = getStripe();
@@ -173,7 +177,7 @@ export default async function SignPage({
             amount: dueAtSigningCents,
             currency: "usd",
             automatic_payment_methods: { enabled: true },
-            description: `StudyCore SAT Agreement — ${contract.student_name}`,
+            description: piDescription,
             receipt_email: contract.parent_email,
             metadata: { contract_id: contract.id },
           });
@@ -188,7 +192,7 @@ export default async function SignPage({
           amount: dueAtSigningCents,
           currency: "usd",
           automatic_payment_methods: { enabled: true },
-          description: `StudyCore SAT Agreement — ${contract.student_name}`,
+          description: piDescription,
           receipt_email: contract.parent_email,
           metadata: { contract_id: contract.id },
         });
@@ -203,7 +207,7 @@ export default async function SignPage({
         amount: dueAtSigningCents,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
-        description: `StudyCore SAT Agreement — ${contract.student_name}`,
+        description: piDescription,
         receipt_email: contract.parent_email,
         metadata: { contract_id: contract.id },
       });
@@ -286,7 +290,7 @@ export default async function SignPage({
         {/* Document identifier strip */}
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="doc-eyebrow-accent">SAT Tutoring Services Agreement</div>
+            <div className="doc-eyebrow-accent">{copy.agreementTitle}</div>
             <h1 className="doc-h1 mt-2">
               For {contract.student_name}
             </h1>
@@ -340,7 +344,7 @@ export default async function SignPage({
           <article className="px-6 py-10 sm:px-12 sm:py-14">
             <header className="mb-10 border-b border-slate-300/80 pb-8">
               <div className="doc-eyebrow-accent">StudyCore LLC</div>
-              <h2 className="doc-h1 mt-2">SAT Tutoring Services Agreement</h2>
+              <h2 className="doc-h1 mt-2">{copy.agreementTitle}</h2>
               <p className="mt-3 font-serif text-[14px] text-slate-600">
                 Effective {formatDate(contract.agreement_date)} between StudyCore LLC and{" "}
                 {contract.parent_name}, parent or legal guardian of {contract.student_name}.
@@ -368,6 +372,7 @@ export default async function SignPage({
           stripePublishableKey={process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
           stripeClientSecret={clientSecret}
           initialError={redirectError}
+          agreementTitle={copy.agreementTitle}
         />
 
         <p className="mt-10 text-center font-serif text-[12px] text-slate-500">

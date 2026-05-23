@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "StudyCore Contracts",
-  description: "SAT Tutoring Services Agreements for StudyCore LLC",
+  description: "SAT &amp; ACT Tutoring Services Agreements for StudyCore LLC",
 };
 
 export const viewport: Viewport = {

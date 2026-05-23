@@ -18,6 +18,8 @@ export type GuaranteeType =
 
 export type SendOption = "contract_only" | "payment_only" | "both";
 
+export type TestType = "SAT" | "ACT";
+
 export interface AppUser {
   id: string;
   email: string;
@@ -30,6 +32,7 @@ export interface AppUser {
 export interface Contract {
   id: string;
   closer_id: string;
+  test_type: TestType;
   parent_name: string;
   parent_email: string;
   parent_phone: string;

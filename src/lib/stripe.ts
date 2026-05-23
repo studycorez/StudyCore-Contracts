@@ -1,6 +1,7 @@
 import "server-only";
 import Stripe from "stripe";
 import type { Contract } from "@/lib/types";
+import { testCopy } from "@/lib/test-type";
 
 let stripeSingleton: Stripe | null = null;
 
@@ -18,7 +19,12 @@ export function getStripe(): Stripe {
 interface CreateCheckoutArgs {
   contract: Pick<
     Contract,
-    "id" | "student_name" | "parent_email" | "amount_due_at_signing" | "signing_token"
+    | "id"
+    | "student_name"
+    | "parent_email"
+    | "amount_due_at_signing"
+    | "signing_token"
+    | "test_type"
   >;
   appUrl: string;
 }
@@ -28,6 +34,7 @@ export async function createCheckoutSessionForContract({
   appUrl,
 }: CreateCheckoutArgs): Promise<Stripe.Checkout.Session> {
   const stripe = getStripe();
+  const copy = testCopy(contract.test_type);
   const amountCents = Math.round(Number(contract.amount_due_at_signing) * 100);
   return stripe.checkout.sessions.create({
     mode: "payment",
@@ -43,8 +50,8 @@ export async function createCheckoutSessionForContract({
           currency: "usd",
           unit_amount: amountCents,
           product_data: {
-            name: `StudyCore SAT Enrollment — ${contract.student_name}`,
-            description: "Deposit due at signing for StudyCore SAT Tutoring Services Agreement.",
+            name: `StudyCore ${copy.name} Enrollment — ${contract.student_name}`,
+            description: `Deposit due at signing for StudyCore ${copy.agreementTitle}.`,
           },
         },
       },
@@ -53,7 +60,7 @@ export async function createCheckoutSessionForContract({
     cancel_url: `${appUrl}/sign/${contract.signing_token}?checkout=cancelled`,
     metadata: { contract_id: contract.id },
     payment_intent_data: {
-      description: `StudyCore SAT Agreement — ${contract.student_name}`,
+      description: `StudyCore ${copy.name} Agreement — ${contract.student_name}`,
       metadata: { contract_id: contract.id },
       setup_future_usage: "off_session",
     },

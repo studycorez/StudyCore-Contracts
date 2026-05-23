@@ -2,6 +2,7 @@ import "server-only";
 import { Resend } from "resend";
 import type { Contract } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
+import { testCopy } from "@/lib/test-type";
 
 const FROM = "StudyCore <contracts@studycore.net>";
 const ADMIN_NOTIFICATION_TO = "contracts@studycore.net";
@@ -23,16 +24,18 @@ interface InitialEmailArgs {
 
 export async function sendContractEmail({ contract, closerName }: InitialEmailArgs) {
   const resend = getResend();
+  const copy = testCopy(contract.test_type);
   const link = `${appUrl()}/sign/${contract.signing_token}`;
   const programSummary = `${contract.program_duration} · ${contract.sessions_per_week}x/week · ${contract.session_length}-hr sessions · ${contract.total_hours} total hours`;
   const due = formatMoney(contract.amount_due_at_signing);
 
   const html = brandedEmail({
-    preheader: `Your StudyCore SAT Agreement for ${contract.student_name} is ready to review and sign.`,
-    title: `Your StudyCore SAT Agreement`,
+    headerLabel: `${copy.name} Tutoring Agreement`,
+    preheader: `Your StudyCore ${copy.name} Agreement for ${contract.student_name} is ready to review and sign.`,
+    title: `Your StudyCore ${copy.name} Agreement`,
     intro: `Hi ${escapeHtml(contract.parent_name)},`,
     paragraphs: [
-      `${escapeHtml(closerName)} from StudyCore has prepared an SAT Tutoring Services Agreement for <strong>${escapeHtml(
+      `${escapeHtml(closerName)} from StudyCore has prepared an ${copy.agreementTitle} for <strong>${escapeHtml(
         contract.student_name
       )}</strong>. Please review the full agreement, sign it, and submit your payment of <strong>${due}</strong> due at signing to lock in your start date.`,
       `<strong>Program summary:</strong> ${escapeHtml(programSummary)}`,
@@ -46,7 +49,7 @@ export async function sendContractEmail({ contract, closerName }: InitialEmailAr
   await resend.emails.send({
     from: FROM,
     to: contract.parent_email,
-    subject: "Your StudyCore SAT Agreement — Action Required",
+    subject: `Your StudyCore ${copy.name} Agreement — Action Required`,
     html,
     replyTo: "support@studycore.net",
   });
@@ -64,9 +67,11 @@ export async function sendPaymentLinkEmail({
   paymentUrl,
 }: PaymentLinkEmailArgs) {
   const resend = getResend();
+  const copy = testCopy(contract.test_type);
   const due = formatMoney(contract.amount_due_at_signing);
 
   const html = brandedEmail({
+    headerLabel: `${copy.name} Tutoring Agreement`,
     preheader: `Your secure StudyCore payment link for ${contract.student_name} is ready.`,
     title: `Reserve ${contract.student_name}'s start date`,
     intro: `Hi ${escapeHtml(contract.parent_name)},`,
@@ -74,7 +79,7 @@ export async function sendPaymentLinkEmail({
       `${escapeHtml(closerName)} from StudyCore has prepared your enrollment for <strong>${escapeHtml(
         contract.student_name
       )}</strong>. Click below to securely submit your <strong>${due}</strong> deposit via Stripe and lock in your start date.`,
-      `Your full SAT Tutoring Services Agreement will follow in a separate email for review and signature.`,
+      `Your full ${copy.agreementTitle} will follow in a separate email for review and signature.`,
     ],
     buttonLabel: "Pay deposit via Stripe",
     buttonHref: paymentUrl,
@@ -85,7 +90,7 @@ export async function sendPaymentLinkEmail({
   await resend.emails.send({
     from: FROM,
     to: contract.parent_email,
-    subject: "StudyCore — Payment Link for SAT Enrollment",
+    subject: `StudyCore — Payment Link for ${copy.name} Enrollment`,
     html,
     replyTo: "support@studycore.net",
   });
@@ -114,6 +119,7 @@ export async function sendPaymentReceivedEmail({
   closerName,
 }: PaymentReceivedEmailArgs) {
   const resend = getResend();
+  const copy = testCopy(contract.test_type);
   const due = formatMoney(contract.amount_due_at_signing);
 
   await resend.emails.send({
@@ -121,13 +127,14 @@ export async function sendPaymentReceivedEmail({
     to: contract.parent_email,
     subject: "StudyCore — Payment Received, Enrollment Confirmed",
     html: brandedEmail({
+      headerLabel: `${copy.name} Tutoring Agreement`,
       preheader: "Your deposit has been received. Welcome to StudyCore!",
       title: "You're enrolled — welcome to StudyCore!",
       intro: `Hi ${escapeHtml(contract.parent_name)},`,
       paragraphs: [
         `Your deposit of <strong>${due}</strong> for <strong>${escapeHtml(
           contract.student_name
-        )}</strong>'s SAT enrollment has been received. Combined with your previously signed agreement, your enrollment is now fully confirmed.`,
+        )}</strong>'s ${copy.name} enrollment has been received. Combined with your previously signed agreement, your enrollment is now fully confirmed.`,
         `Our team will reach out within 24 hours to schedule your first session and match your tutor. A copy of your signed agreement was emailed to you earlier — keep it for your records.`,
       ],
       buttonLabel: "Visit StudyCore",
@@ -143,13 +150,15 @@ export async function sendPaymentReceivedEmail({
   await resend.emails.send({
     from: FROM,
     to: adminRecipients,
-    subject: `Payment received: ${contract.student_name} (${contract.parent_name})`,
+    subject: `Payment received (${copy.name}): ${contract.student_name} (${contract.parent_name})`,
     html: brandedEmail({
+      headerLabel: `${copy.name} Tutoring Agreement`,
       preheader: "Deposit received; contract is fully complete.",
       title: "Payment received",
       intro: "A previously signed StudyCore agreement has now been paid.",
       paragraphs: [
-        `<strong>Student:</strong> ${escapeHtml(contract.student_name)}<br>
+        `<strong>Test:</strong> ${escapeHtml(copy.name)}<br>
+         <strong>Student:</strong> ${escapeHtml(contract.student_name)}<br>
          <strong>Parent:</strong> ${escapeHtml(contract.parent_name)} (${escapeHtml(
           contract.parent_email
         )})<br>
@@ -172,7 +181,8 @@ export async function sendCompletionEmails({
   pdfBuffer,
 }: CompletionEmailArgs) {
   const resend = getResend();
-  const filename = `StudyCore-SAT-Agreement-${contract.student_name.replace(/\s+/g, "-")}.pdf`;
+  const copy = testCopy(contract.test_type);
+  const filename = `StudyCore-${copy.name}-Agreement-${contract.student_name.replace(/\s+/g, "-")}.pdf`;
   const attachment = {
     filename,
     content: pdfBuffer.toString("base64"),
@@ -186,9 +196,10 @@ export async function sendCompletionEmails({
     from: FROM,
     to: contract.parent_email,
     subject: fullyPaid
-      ? "StudyCore SAT Agreement — Signed & Confirmed"
-      : "StudyCore SAT Agreement — Signed (Payment Pending)",
+      ? `StudyCore ${copy.name} Agreement — Signed & Confirmed`
+      : `StudyCore ${copy.name} Agreement — Signed (Payment Pending)`,
     html: brandedEmail({
+      headerLabel: `${copy.name} Tutoring Agreement`,
       preheader: fullyPaid
         ? "Your enrollment is confirmed."
         : "Your signed agreement is attached. Payment to follow.",
@@ -198,7 +209,7 @@ export async function sendCompletionEmails({
       intro: `Hi ${escapeHtml(contract.parent_name)},`,
       paragraphs: fullyPaid
         ? [
-            `Thank you for signing your StudyCore SAT Agreement for <strong>${escapeHtml(
+            `Thank you for signing your StudyCore ${copy.name} Agreement for <strong>${escapeHtml(
               contract.student_name
             )}</strong>. Your payment of <strong>${formatMoney(
               contract.amount_due_at_signing
@@ -206,7 +217,7 @@ export async function sendCompletionEmails({
             `A copy of your fully signed agreement is attached for your records. Our team will reach out within 24 hours to schedule your first session and match your tutor.`,
           ]
         : [
-            `Thank you for signing your StudyCore SAT Agreement for <strong>${escapeHtml(
+            `Thank you for signing your StudyCore ${copy.name} Agreement for <strong>${escapeHtml(
               contract.student_name
             )}</strong>. A copy of your signed agreement is attached for your records.`,
             `Your StudyCore contact will send you a secure Stripe payment link separately to complete the <strong>${formatMoney(
@@ -229,18 +240,20 @@ export async function sendCompletionEmails({
     from: FROM,
     to: adminRecipients,
     subject: fullyPaid
-      ? `Signed & paid: ${contract.student_name} (${contract.parent_name})`
-      : `Signed (payment pending): ${contract.student_name} (${contract.parent_name})`,
+      ? `Signed & paid (${copy.name}): ${contract.student_name} (${contract.parent_name})`
+      : `Signed (payment pending, ${copy.name}): ${contract.student_name} (${contract.parent_name})`,
     html: brandedEmail({
+      headerLabel: `${copy.name} Tutoring Agreement`,
       preheader: fullyPaid
         ? "A contract was signed and paid."
         : "A contract was signed; payment still owed.",
       title: fullyPaid ? "Contract signed" : "Contract signed — payment pending",
       intro: fullyPaid
-        ? `A new StudyCore SAT Agreement has been signed and paid.`
-        : `A new StudyCore SAT Agreement has been signed. Payment has not been received yet — send the Stripe payment link from the contract page.`,
+        ? `A new StudyCore ${copy.name} Agreement has been signed and paid.`
+        : `A new StudyCore ${copy.name} Agreement has been signed. Payment has not been received yet — send the Stripe payment link from the contract page.`,
       paragraphs: [
-        `<strong>Student:</strong> ${escapeHtml(contract.student_name)}<br>
+        `<strong>Test:</strong> ${escapeHtml(copy.name)}<br>
+         <strong>Student:</strong> ${escapeHtml(contract.student_name)}<br>
          <strong>Parent:</strong> ${escapeHtml(contract.parent_name)} (${escapeHtml(
           contract.parent_email
         )})<br>
@@ -280,6 +293,9 @@ interface BrandedEmailArgs {
   buttonHref?: string;
   afterButton?: string;
   footer: string;
+  // Optional header label shown in the navy bar at the top of the email.
+  // Defaults to "Tutoring Agreement" when omitted.
+  headerLabel?: string;
 }
 
 function brandedEmail({
@@ -291,6 +307,7 @@ function brandedEmail({
   buttonHref,
   afterButton,
   footer,
+  headerLabel,
 }: BrandedEmailArgs) {
   return `<!doctype html>
 <html>
@@ -308,7 +325,9 @@ function brandedEmail({
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,0.06);">
         <tr><td style="background:#1A3C6B;padding:28px 32px;color:#fff;">
           <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;">StudyCore LLC</div>
-          <div style="font-size:22px;font-weight:700;margin-top:4px;">SAT Tutoring Agreement</div>
+          <div style="font-size:22px;font-weight:700;margin-top:4px;">${escapeHtml(
+            headerLabel ?? "Tutoring Agreement"
+          )}</div>
         </td></tr>
         <tr><td style="padding:32px;font-size:15px;line-height:1.6;">
           <h1 style="font-size:22px;margin:0 0 16px;color:#0f172a;">${escapeHtml(title)}</h1>

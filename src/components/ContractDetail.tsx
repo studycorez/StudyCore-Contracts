@@ -55,13 +55,25 @@ export default function ContractDetail({
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="text-xs uppercase tracking-wider text-slate-500">Contract</div>
+          <div className="text-xs uppercase tracking-wider text-slate-500">
+            {contract.test_type} Contract
+          </div>
           <h1 className="text-2xl font-bold text-slate-900">{contract.student_name}</h1>
           <p className="text-sm text-slate-500">
             For {contract.parent_name} · Closer: {closerName}
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <span
+            className={
+              "inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-wider " +
+              (contract.test_type === "ACT"
+                ? "bg-orange/10 text-orange-dark"
+                : "bg-navy/10 text-navy")
+            }
+          >
+            {contract.test_type}
+          </span>
           <StatusBadge status={contract.status} />
           {contract.pdf_url && (
             <a
@@ -153,7 +165,7 @@ export default function ContractDetail({
           <Row label="Phone" value={contract.parent_phone} />
           <Row label="Agreement date" value={formatDate(contract.agreement_date)} />
           <Row label="Student" value={contract.student_name} />
-          <Row label="Target SAT" value={String(contract.target_score)} />
+          <Row label={`Target ${contract.test_type}`} value={String(contract.target_score)} />
         </Section>
 
         <Section title="Program">

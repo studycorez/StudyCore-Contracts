@@ -8,6 +8,7 @@ import {
   Font,
 } from "@react-pdf/renderer";
 import { buildContractClauses } from "@/lib/contract-text";
+import { testCopy } from "@/lib/test-type";
 import { formatDate } from "@/lib/format";
 import type { Contract } from "@/lib/types";
 
@@ -170,6 +171,7 @@ export default function ContractDocument({
   signedAt?: string | null;
 }) {
   const clauses = buildContractClauses(contract);
+  const copy = testCopy(contract.test_type);
   const signedDateLabel = signedAt ? formatDate(signedAt) : formatDate(new Date().toISOString());
   // Signature section is numbered as "the next clause after the last
   // body clause." With Free Session Guarantee inserted, the final body
@@ -179,7 +181,7 @@ export default function ContractDocument({
 
   return (
     <Document
-      title={`StudyCore SAT Agreement – ${contract.student_name}`}
+      title={`StudyCore ${copy.name} Agreement – ${contract.student_name}`}
       author="StudyCore LLC"
     >
       <Page size="LETTER" style={styles.page} wrap>
@@ -187,7 +189,7 @@ export default function ContractDocument({
           <Text style={styles.brand}>
             STUDYCORE <Text style={styles.accent}>LLC</Text>
           </Text>
-          <Text style={styles.subtitle}>SAT Tutoring Services Agreement</Text>
+          <Text style={styles.subtitle}>{copy.agreementTitle}</Text>
           <Text style={styles.meta}>studycore.net · San Ramon, CA</Text>
         </View>
 

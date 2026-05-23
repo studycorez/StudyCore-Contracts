@@ -1,8 +1,10 @@
 # StudyCore Contracts
 
-Full-stack contract management web app for **StudyCore LLC**. Closers create SAT
-Tutoring Services Agreements; parents review, sign, and pay through a secure link;
-admins oversee everything.
+Full-stack contract management web app for **StudyCore LLC**. Closers create
+SAT or ACT Tutoring Services Agreements; parents review, sign, and pay through a
+secure link; admins oversee everything. The test type (SAT or ACT) is picked at
+contract creation time and drives the agreement title, score labels, Stripe
+product name, and every piece of email copy.
 
 Live target: [`sign.studycore.net`](https://sign.studycore.net)
 

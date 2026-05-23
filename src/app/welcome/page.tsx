@@ -29,7 +29,7 @@ export default function WelcomePage() {
           <Step
             n="1"
             title="Tutor match"
-            body="We'll pair your student with a vetted tutor (1550+ SAT) based on diagnostic results."
+            body="We'll pair your student with a top-scoring vetted tutor based on diagnostic results."
           />
           <Step
             n="2"

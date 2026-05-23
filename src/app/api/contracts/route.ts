@@ -3,9 +3,10 @@ import { getSessionUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendContractEmail, sendPaymentLinkEmail } from "@/lib/email";
 import { createCheckoutSessionForContract } from "@/lib/stripe";
-import type { Contract, SendOption } from "@/lib/types";
+import type { Contract, SendOption, TestType } from "@/lib/types";
 
 const VALID_SEND_OPTIONS: SendOption[] = ["contract_only", "payment_only", "both"];
+const VALID_TEST_TYPES: TestType[] = ["SAT", "ACT"];
 
 function appUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? "https://sign.studycore.net";
@@ -46,6 +47,10 @@ export async function POST(req: Request) {
     ? body.send_option
     : "both";
 
+  const testType: TestType = VALID_TEST_TYPES.includes(body.test_type)
+    ? body.test_type
+    : "SAT";
+
   const dueCents = Math.round(Number(body.amount_due_at_signing) * 100);
   if ((sendOption === "payment_only" || sendOption === "both") && dueCents <= 0) {
     return NextResponse.json(
@@ -58,13 +63,14 @@ export async function POST(req: Request) {
   }
 
   const admin = createAdminClient();
-  const { send_option: _unused, ...rest } = body;
+  const { send_option: _unusedSend, test_type: _unusedTestType, ...rest } = body;
   const { data: inserted, error } = await admin
     .from("contracts")
     .insert({
       ...rest,
       closer_id: me.id,
       send_option: sendOption,
+      test_type: testType,
       status: "sent",
     })
     .select("*")

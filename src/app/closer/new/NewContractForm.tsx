@@ -11,6 +11,7 @@ type GuaranteeType =
   | "We Work With You Free Until You Hit Your Score"
   | "No Guarantee";
 type SendOption = "contract_only" | "payment_only" | "both";
+type TestType = "SAT" | "ACT";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -18,6 +19,9 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Test type drives all score / agreement labels for this contract.
+  const [testType, setTestType] = useState<TestType>("SAT");
 
   // Section 1
   const [parentName, setParentName] = useState("");
@@ -113,6 +117,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
     setSubmitting(true);
     const payload = {
+      test_type: testType,
       parent_name: parentName,
       parent_email: parentEmail,
       parent_phone: parentPhone,
@@ -155,6 +160,28 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <FormSection
+        title="Test Type"
+        subtitle="Pick which standardized test this contract covers. This drives the agreement title, score labels, Stripe product name, and all email copy."
+      >
+        <div className="md:col-span-2 grid grid-cols-2 gap-3">
+          <TestTypeCard
+            value="SAT"
+            current={testType}
+            onChange={setTestType}
+            label="SAT"
+            description="Composite 400–1600. Tutor claim: SAT 1550+. Score reports via College Board."
+          />
+          <TestTypeCard
+            value="ACT"
+            current={testType}
+            onChange={setTestType}
+            label="ACT"
+            description="Composite 1–36. Tutor claim: ACT 34+. Score reports via ACT, Inc."
+          />
+        </div>
+      </FormSection>
+
       <FormSection title="1. Parties" subtitle="Closer and parent details.">
         <Field label="Closer Name">
           <input className="input" value={closerName} disabled />
@@ -201,7 +228,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             onChange={(e) => setStudentName(e.target.value)}
           />
         </Field>
-        <Field label="Current SAT Score (Diagnostic) — optional">
+        <Field label={`Current ${testType} Score (Diagnostic) — optional`}>
           <input
             type="number"
             className="input"
@@ -212,7 +239,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
             }
           />
         </Field>
-        <Field label="Target SAT Score">
+        <Field label={`Target ${testType} Score`}>
           <input
             required
             type="number"
@@ -229,7 +256,7 @@ export default function NewContractForm({ closerName }: { closerName: string }) 
         title="2. Program"
         subtitle="Closer chooses every program detail. No auto-calculation or score-based restrictions."
       >
-        <Field label="Target SAT Test Date">
+        <Field label={`Target ${testType} Test Date`}>
           <input
             required
             type="date"
@@ -535,6 +562,44 @@ function SendOptionCard({
       />
       <div>
         <div className="font-medium text-slate-800">{label}</div>
+        <div className="text-sm text-slate-500">{description}</div>
+      </div>
+    </label>
+  );
+}
+
+function TestTypeCard({
+  value,
+  current,
+  onChange,
+  label,
+  description,
+}: {
+  value: TestType;
+  current: TestType;
+  onChange: (v: TestType) => void;
+  label: string;
+  description: string;
+}) {
+  const selected = current === value;
+  return (
+    <label
+      className={
+        "flex cursor-pointer items-start gap-3 rounded-md border px-4 py-3 transition " +
+        (selected
+          ? "border-navy bg-navy/5"
+          : "border-slate-200 hover:border-slate-300")
+      }
+    >
+      <input
+        type="radio"
+        name="test_type"
+        className="mt-1 h-4 w-4 text-navy focus:ring-navy/30"
+        checked={selected}
+        onChange={() => onChange(value)}
+      />
+      <div>
+        <div className="font-semibold text-slate-800">{label}</div>
         <div className="text-sm text-slate-500">{description}</div>
       </div>
     </label>

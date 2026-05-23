@@ -1,5 +1,6 @@
 import type { Contract } from "@/lib/types";
 import { formatDate, formatMoney } from "@/lib/format";
+import { testCopy } from "@/lib/test-type";
 
 export interface ContractClause {
   heading: string;
@@ -16,20 +17,29 @@ export const FREE_SESSION_GUARANTEE_DEFAULTS = {
 } as const;
 
 export function buildContractClauses(c: Contract): ContractClause[] {
+  const copy = testCopy(c.test_type);
   const clauses: ContractClause[] = [];
+
+  // SAT-specific section bullet mentions Desmos (built-in calculator on the
+  // digital SAT). The ACT permits a physical calculator but doesn't have an
+  // analogous test-day tool, so we adapt the workshop bullet text.
+  const strategyWorkshopBullet =
+    c.test_type === "ACT"
+      ? "Strategy Workshops (pacing, process of elimination, calculator strategy, test-taking meta-skills)"
+      : "Strategy Workshops (pacing, process of elimination, Desmos usage, test-taking meta-skills)";
 
   clauses.push({
     heading: "1. PARTIES & PROGRAM DETAILS",
     paragraphs: [
-      `This SAT Tutoring Services Agreement ("Agreement") is entered into as of ${formatDate(
+      `This ${copy.agreementTitle} ("Agreement") is entered into as of ${formatDate(
         c.agreement_date
       )} by and between StudyCore LLC, a California limited liability company ("StudyCore"), and ${c.parent_name} ("Client").`,
       `Client represents that they are the parent or legal guardian of the Student named below and is signing this Agreement on the Student's behalf. Client accepts full legal responsibility for all obligations under this Agreement.`,
       `Student Name: ${c.student_name}`,
       ...(typeof c.current_score === "number"
-        ? [`Starting SAT Score: ${c.current_score} (verified at session 1 diagnostic)`]
-        : [`Starting SAT Score: To be established at session 1 diagnostic`]),
-      `Target SAT Score: ${c.target_score}`,
+        ? [`Starting ${copy.name} Score: ${c.current_score} (verified at session 1 diagnostic)`]
+        : [`Starting ${copy.name} Score: To be established at session 1 diagnostic`]),
+      `Target ${copy.name} Score: ${c.target_score}`,
       `Parent Email: ${c.parent_email}`,
       `Parent Phone: ${c.parent_phone}`,
     ],
@@ -43,8 +53,8 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       `Session Length: ${c.session_length} hour${c.session_length === 1 ? "" : "s"}`,
       `Total Program Hours: ${c.total_hours}`,
       `Agreement Date: ${formatDate(c.agreement_date)}`,
-      `Target SAT Test Date: ${formatDate(c.test_date)}`,
-      `StudyCore will match the student with a vetted tutor (SAT score 1550+) based on diagnostic results after program commencement. The session 1 diagnostic is administered and proctored live by the assigned tutor and serves as the verified baseline score for all guarantee purposes. The guarantee does not activate until this diagnostic is completed.`,
+      `Target ${copy.name} Test Date: ${formatDate(c.test_date)}`,
+      `StudyCore will match the student with a vetted tutor (${copy.name} score ${copy.tutorScoreClaim}) based on diagnostic results after program commencement. The session 1 diagnostic is administered and proctored live by the assigned tutor and serves as the verified baseline score for all guarantee purposes. The guarantee does not activate until this diagnostic is completed.`,
     ],
   });
 
@@ -52,9 +62,9 @@ export function buildContractClauses(c: Contract): ContractClause[] {
     heading: "3. SERVICES INCLUDED",
     paragraphs: [],
     bullets: [
-      "1-on-1 tutoring sessions with a matched, vetted tutor (SAT score 1550+)",
+      `1-on-1 tutoring sessions with a matched, vetted tutor (${copy.name} score ${copy.tutorScoreClaim})`,
       "Session 1 diagnostic assessment, administered and proctored live by the assigned tutor to establish a verified baseline score",
-      "Access to group SAT preparation sessions at no additional cost, included throughout the program. Group session types include: Strategy Workshops (pacing, process of elimination, Desmos usage, test-taking meta-skills), Practice Test Review (tutor-led review of recent practice tests), and Office Hours / Q&A (open format for homework questions)",
+      `Access to group ${copy.groupSessionPrefix} preparation sessions at no additional cost, included throughout the program. Group session types include: ${strategyWorkshopBullet}, Practice Test Review (tutor-led review of recent practice tests), and Office Hours / Q&A (open format for homework questions)`,
       "Full-length practice tests completed independently by the student at scheduled program checkpoints",
       "Proprietary study materials, strategy guides, and drill sets via the StudyCore platform",
       "AI-powered performance analytics after each practice test",
@@ -127,7 +137,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
       heading:
         "6. PERFORMANCE GUARANTEE — WE WORK WITH YOU FREE UNTIL YOU HIT YOUR SCORE",
       paragraphs: [
-        `If the student does not achieve their target score on their first official SAT after program completion, StudyCore LLC will continue working with the student at no additional cost — providing unlimited access to group SAT preparation sessions including Strategy Workshops, Practice Test Review sessions, and Office Hours / Q&A — until the student achieves their target score or the next available SAT test date, whichever comes first.`,
+        `If the student does not achieve their target score on their first official ${copy.name} after program completion, StudyCore LLC will continue working with the student at no additional cost — providing unlimited access to group ${copy.groupSessionPrefix} preparation sessions including Strategy Workshops, Practice Test Review sessions, and Office Hours / Q&A — until the student achieves their target score or the next available ${copy.name} test date, whichever comes first.`,
         `This guarantee is contingent upon all of the following conditions being met:`,
       ],
       bullets: [
@@ -135,8 +145,8 @@ export function buildContractClauses(c: Contract): ContractClause[] {
         "Student attended at least 90% of scheduled 1-on-1 sessions",
         "Student completed 100% of assigned homework, practice tests, and drill sets",
         "Tutor session logs document consistent student engagement throughout the program. If a student is marked as unengaged for more than 2 consecutive sessions, StudyCore will notify the parent in writing. Continued disengagement may result in revocation of guarantee eligibility at StudyCore's discretion with written notice.",
-        "Student took their first official SAT within 60 days of program completion",
-        "Official College Board score report submitted to StudyCore within 14 days of receiving results",
+        `Student took their first official ${copy.name} within 60 days of program completion`,
+        `Official ${copy.scoreReporter} score report submitted to StudyCore within 14 days of receiving results`,
         "Continued support is delivered through group sessions conducted at times scheduled by StudyCore. Group sessions are not convertible to 1-on-1 tutoring, refunds, account credit, or cash equivalent.",
       ],
     });
@@ -161,19 +171,19 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   const reportDays =
     c.score_report_submission_days ??
     FREE_SESSION_GUARANTEE_DEFAULTS.score_report_submission_days;
-  const nextSatPhrase = c.next_sat_date
-    ? `the next official SAT administration following the Target Test (currently scheduled for ${c.next_sat_date})`
-    : `the next official SAT administration following the Target Test`;
+  const nextTestPhrase = c.next_sat_date
+    ? `the next official ${copy.name} administration following the Target Test (currently scheduled for ${c.next_sat_date})`
+    : `the next official ${copy.name} administration following the Target Test`;
 
   clauses.push({
     heading: "7. FREE SESSION GUARANTEE",
     paragraphs: [
-      `Free Session Guarantee. If Student does not achieve the Target Score of ${c.target_score} on the official SAT examination administered on ${formatDate(
+      `Free Session Guarantee. If Student does not achieve the Target Score of ${c.target_score} on the official ${copy.name} examination administered on ${formatDate(
         c.test_date
-      )} (the "Target Test"), StudyCore will provide Student with complimentary access to group SAT preparation sessions, subject to the conditions below.`,
-      `*Eligibility.* To qualify, Student must have (a) attended at least ${attendancePct}% of scheduled 1:1 tutoring sessions during the original engagement, (b) completed all assigned homework and practice materials in good faith, and (c) sat for the Target Test and submitted the official College Board score report to StudyCore within ${reportDays} days of its release. The guarantee does not activate for students who do not have a verified baseline score established by the session 1 diagnostic.`,
-      `*Scope and duration.* Complimentary group sessions — including Strategy Workshops, Practice Test Review sessions, and Office Hours / Q&A — will be provided until the earlier of (i) ${nextSatPhrase}, or (ii) the date Student achieves the Target Score on a subsequent official or full-length proctored practice SAT. Group sessions are conducted with multiple students per session at times scheduled by StudyCore and are not convertible to 1:1 tutoring, refunds, account credit, or cash equivalent.`,
-      `*Forfeiture.* The guarantee terminates automatically if Student fails to register for or sit for the next official SAT, withdraws from the program, or materially breaches this Agreement.`,
+      )} (the "Target Test"), StudyCore will provide Student with complimentary access to group ${copy.groupSessionPrefix} preparation sessions, subject to the conditions below.`,
+      `*Eligibility.* To qualify, Student must have (a) attended at least ${attendancePct}% of scheduled 1:1 tutoring sessions during the original engagement, (b) completed all assigned homework and practice materials in good faith, and (c) sat for the Target Test and submitted the official ${copy.scoreReporter} score report to StudyCore within ${reportDays} days of its release. The guarantee does not activate for students who do not have a verified baseline score established by the session 1 diagnostic.`,
+      `*Scope and duration.* Complimentary group sessions — including Strategy Workshops, Practice Test Review sessions, and Office Hours / Q&A — will be provided until the earlier of (i) ${nextTestPhrase}, or (ii) the date Student achieves the Target Score on a subsequent official or full-length proctored practice ${copy.name}. Group sessions are conducted with multiple students per session at times scheduled by StudyCore and are not convertible to 1:1 tutoring, refunds, account credit, or cash equivalent.`,
+      `*Forfeiture.* The guarantee terminates automatically if Student fails to register for or sit for the next official ${copy.name}, withdraws from the program, or materially breaches this Agreement.`,
     ],
   });
 
@@ -221,7 +231,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   clauses.push({
     heading: "12. INTELLECTUAL PROPERTY",
     paragraphs: [
-      `All materials provided by StudyCore LLC are proprietary intellectual property of StudyCore LLC. Client and Student may use materials solely for personal, non-commercial SAT preparation. Reproduction, distribution, or resale without written consent is prohibited.`,
+      `All materials provided by StudyCore LLC are proprietary intellectual property of StudyCore LLC. Client and Student may use materials solely for personal, non-commercial ${copy.preparationPhrase}. Reproduction, distribution, or resale without written consent is prohibited.`,
     ],
   });
 
@@ -242,7 +252,7 @@ export function buildContractClauses(c: Contract): ContractClause[] {
   clauses.push({
     heading: "15. FORCE MAJEURE",
     paragraphs: [
-      `Neither party shall be held liable for delays or failures in performance resulting from events outside their reasonable control, including but not limited to College Board test cancellations, natural disasters, acts of government, or other force majeure events. In such cases, applicable deadlines, including guarantee windows, will be extended to the next reasonable opportunity.`,
+      `Neither party shall be held liable for delays or failures in performance resulting from events outside their reasonable control, including but not limited to ${copy.scoreReporter} test cancellations, natural disasters, acts of government, or other force majeure events. In such cases, applicable deadlines, including guarantee windows, will be extended to the next reasonable opportunity.`,
     ],
   });
 

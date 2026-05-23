@@ -22,6 +22,11 @@ create table if not exists public.contracts (
   id uuid primary key default gen_random_uuid(),
   closer_id uuid not null references public.users(id) on delete restrict,
 
+  -- Which standardized test this contract covers. Drives every piece of copy
+  -- that differs between SAT and ACT (agreement title, score reporter,
+  -- tutor claim, Stripe product name, email subjects, etc.).
+  test_type text not null default 'SAT' check (test_type in ('SAT', 'ACT')),
+
   -- Section 1 — Parties
   parent_name text not null,
   parent_email text not null,
@@ -80,6 +85,7 @@ create table if not exists public.contracts (
 create index if not exists contracts_closer_idx on public.contracts(closer_id);
 create index if not exists contracts_status_idx on public.contracts(status);
 create index if not exists contracts_signing_token_idx on public.contracts(signing_token);
+create index if not exists contracts_test_type_idx on public.contracts(test_type);
 
 -- ROW LEVEL SECURITY
 alter table public.users enable row level security;

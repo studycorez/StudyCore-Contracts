@@ -14,6 +14,8 @@ interface Props {
   stripePublishableKey: string;
   stripeClientSecret: string | null;
   initialError?: string | null;
+  // e.g. "SAT Tutoring Services Agreement" or "ACT Tutoring Services Agreement"
+  agreementTitle: string;
 }
 
 export const SIGNATURE_STORAGE_KEY = (token: string) => `studycore.sig.${token}`;
@@ -280,7 +282,7 @@ function InnerForm(props: Props) {
             className="mt-[5px] h-4 w-4 flex-shrink-0 rounded-none border-slate-400 text-navy focus:ring-2 focus:ring-navy/30"
           />
           <span>
-            I have read and agree to the StudyCore SAT Tutoring Services Agreement above,
+            I have read and agree to the StudyCore {props.agreementTitle} above,
             and I authorize StudyCore LLC to charge my payment method as described.
           </span>
         </label>

@@ -11,7 +11,7 @@ export default function HomePage() {
           StudyCore <span className="text-orange">Contracts</span>
         </h1>
         <p className="max-w-2xl text-lg text-white/80">
-          Internal contract management portal for StudyCore SAT Tutoring agreements. Closers and admins
+          Internal contract management portal for StudyCore SAT &amp; ACT Tutoring agreements. Closers and admins
           sign in to manage and send contracts to parents.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
