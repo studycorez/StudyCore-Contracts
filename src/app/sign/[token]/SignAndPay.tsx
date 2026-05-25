@@ -4,7 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import SignatureCanvas from "react-signature-canvas";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import {
+  loadStripe,
+  type Stripe,
+  type StripeElements,
+} from "@stripe/stripe-js";
 
 interface Props {
   contractId: string;
@@ -43,17 +47,32 @@ export default function SignAndPay(props: Props) {
           },
         }}
       >
-        <InnerForm {...props} />
+        <PaymentBoundForm {...props} />
       </Elements>
     );
   }
-  return <InnerForm {...props} />;
+  // No payment due (e.g. `contract_only` send mode, or already paid via
+  // Stripe Checkout). Skip the Elements provider entirely — calling
+  // useStripe / useElements outside an <Elements> tree throws.
+  return <InnerForm {...props} stripe={null} elements={null} />;
 }
 
-function InnerForm(props: Props) {
-  const router = useRouter();
+// Thin shim that lives inside <Elements> so the Stripe hooks have a
+// provider. Forwards the resolved stripe + elements down to InnerForm.
+function PaymentBoundForm(props: Props) {
   const stripe = useStripe();
   const elements = useElements();
+  return <InnerForm {...props} stripe={stripe} elements={elements} />;
+}
+
+function InnerForm(
+  props: Props & {
+    stripe: Stripe | null;
+    elements: StripeElements | null;
+  }
+) {
+  const router = useRouter();
+  const { stripe, elements } = props;
   const sigRef = useRef<SignatureCanvas | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hasSigned, setHasSigned] = useState(false);
